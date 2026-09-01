@@ -1,8 +1,7 @@
-import "dotenv/config";
 import app from "./app.js";
 
-const PORT = Number(process.env.API_PORT) || 3000;
+import { env } from "./config/env.js";
 
-app.listen(PORT, () => {
-  console.log(`Happit API running on port ${PORT}`);
+app.listen(env.API_PORT, () => {
+  console.log(`Happit API running on port ${env.API_PORT}`);
 });
