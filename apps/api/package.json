@@ -1,6 +1,7 @@
 {
   "name": "@happit/api",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
@@ -9,7 +10,9 @@
     "test": "vitest run",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
