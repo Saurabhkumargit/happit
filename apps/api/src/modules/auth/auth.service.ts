@@ -5,6 +5,7 @@ import { users } from "../../db/schema.js";
 import { AppError } from "../../lib/AppError.js";
 import { hashPassword } from "../../lib/password.js";
 import type { RegisterInput } from "./auth.validation.js";
+import { createSession } from "../../lib/session.js";
 
 export async function registerUser(input: RegisterInput) {
   const existingUser = await db
@@ -35,5 +36,10 @@ export async function registerUser(input: RegisterInput) {
       createdAt: users.createdAt,
     });
 
-  return user;
+  const session = await createSession(user.id);
+
+  return {
+    user,
+    session,
+  };
 }
