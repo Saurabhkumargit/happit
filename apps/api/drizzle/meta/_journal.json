@@ -15,6 +15,13 @@
       "when": 1788261535343,
       "tag": "0001_pale_saracen",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788522763067,
+      "tag": "0002_lush_venom",
+      "breakpoints": true
     }
   ]
 }
