@@ -104,8 +104,13 @@ describe("authenticated requests", () => {
     expect(meResponse.body).toEqual({
       user: {
         id: expect.any(String),
+        email: "me-test@example.com",
+        createdAt: expect.any(String),
       },
     });
+
+    expect(meResponse.body.user).not.toHaveProperty("passwordHash");
+    expect(meResponse.body.user).not.toHaveProperty("password");
   });
 
   it("rejects requests without a session", async () => {
@@ -246,6 +251,103 @@ describe("POST /api/v1/auth/login", () => {
       error: {
         code: "VALIDATION_ERROR",
         message: "Invalid request data",
+      },
+    });
+  });
+});
+
+describe("POST /api/v1/auth/logout", () => {
+  it("invalidates the current session", async () => {
+    const email = `logout-${Date.now()}@example.com`;
+    const password = "password123";
+
+    const loginResponse = await request(app)
+      .post("/api/v1/auth/register")
+      .send({
+        email,
+        password,
+      });
+
+    expect(loginResponse.status).toBe(201);
+
+    const cookies = loginResponse.headers["set-cookie"];
+
+    const beforeLogout = await request(app)
+      .get("/api/v1/auth/me")
+      .set("Cookie", cookies);
+
+    expect(beforeLogout.status).toBe(200);
+
+    const logoutResponse = await request(app)
+      .post("/api/v1/auth/logout")
+      .set("Cookie", cookies);
+
+    expect(logoutResponse.status).toBe(204);
+
+    const afterLogout = await request(app)
+      .get("/api/v1/auth/me")
+      .set("Cookie", cookies);
+
+    expect(afterLogout.status).toBe(401);
+
+    await db.delete(users).where(eq(users.email, email));
+  });
+
+  it("rejects logout without authentication", async () => {
+    const response = await request(app).post("/api/v1/auth/logout");
+
+    expect(response.status).toBe(401);
+
+    expect(response.body).toEqual({
+      error: {
+        code: "UNAUTHENTICATED",
+        message: "Authentication required",
+      },
+    });
+  });
+});
+
+describe("logout", () => {
+  it("logs out an authenticated user and invalidates the session", async () => {
+    const agent = request.agent(app);
+
+    const registerResponse = await agent
+      .post("/api/v1/auth/register")
+      .send({
+        email: `logout-${Date.now()}@example.com`,
+        password: "password123",
+      });
+
+    expect(registerResponse.status).toBe(201);
+
+    const meBeforeLogout = await agent.get("/api/v1/auth/me");
+
+    expect(meBeforeLogout.status).toBe(200);
+
+    const logoutResponse = await agent.post("/api/v1/auth/logout");
+
+    expect(logoutResponse.status).toBe(204);
+
+    const meAfterLogout = await agent.get("/api/v1/auth/me");
+
+    expect(meAfterLogout.status).toBe(401);
+    expect(meAfterLogout.body).toEqual({
+      error: {
+        code: "UNAUTHENTICATED",
+        message: "Authentication required",
+      },
+    });
+  });
+
+  it("rejects logout without authentication", async () => {
+    const response = await request(app).post("/api/v1/auth/logout");
+
+    expect(response.status).toBe(401);
+
+    expect(response.body).toEqual({
+      error: {
+        code: "UNAUTHENTICATED",
+        message: "Authentication required",
       },
     });
   });

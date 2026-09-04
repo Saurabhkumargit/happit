@@ -35,7 +35,6 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
     };
 
     req.auth = {
-      userId: session.userId,
       sessionId: session.id,
     };
 
