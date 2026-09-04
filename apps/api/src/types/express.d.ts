@@ -4,6 +4,11 @@ declare global {
       user?: {
         id: string;
       };
+
+      auth?: {
+        userId: string;
+        sessionId: string;
+      };
     }
   }
 }

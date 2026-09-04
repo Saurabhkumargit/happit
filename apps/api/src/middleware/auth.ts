@@ -34,6 +34,11 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
       id: session.userId,
     };
 
+    req.auth = {
+      userId: session.userId,
+      sessionId: session.id,
+    };
+
     next();
   } catch (error) {
     next(error);

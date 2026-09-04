@@ -1,5 +1,6 @@
 import request from "supertest";
 import { afterAll, describe, expect, it } from "vitest";
+import { loginUser } from "../modules/auth/auth.service.js";
 
 import app from "../app.js";
 import { db } from "../db/index.js";
@@ -116,6 +117,135 @@ describe("authenticated requests", () => {
       error: {
         code: "UNAUTHENTICATED",
         message: "Authentication required",
+      },
+    });
+  });
+});
+
+describe("loginUser", () => {
+  it("logs in with valid credentials", async () => {
+    const email = `login-valid-${Date.now()}@example.com`;
+    const password = "password123";
+
+    await request(app).post("/api/v1/auth/register").send({
+      email,
+      password,
+    });
+
+    const result = await loginUser({
+      email,
+      password,
+    });
+
+    expect(result.user.email).toBe(email);
+    expect(result.user.id).toEqual(expect.any(String));
+    expect(result.session.id).toEqual(expect.any(String));
+    expect(result.session.userId).toBe(result.user.id);
+
+    await db.delete(users).where(eq(users.email, email));
+  });
+
+  it("rejects an incorrect password", async () => {
+    const email = `login-wrong-password-${Date.now()}@example.com`;
+    const password = "password123";
+
+    await request(app).post("/api/v1/auth/register").send({
+      email,
+      password,
+    });
+
+    await expect(
+      loginUser({
+        email,
+        password: "wrong-password",
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 401,
+      code: "INVALID_CREDENTIALS",
+    });
+
+    await db.delete(users).where(eq(users.email, email));
+  });
+
+  it("rejects a nonexistent user", async () => {
+    await expect(
+      loginUser({
+        email: `nonexistent-${Date.now()}@example.com`,
+        password: "password123",
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 401,
+      code: "INVALID_CREDENTIALS",
+    });
+  });
+});
+
+describe("POST /api/v1/auth/login", () => {
+  it("logs in with valid credentials", async () => {
+    const email = `route-login-${Date.now()}@example.com`;
+    const password = "password123";
+
+    await request(app).post("/api/v1/auth/register").send({
+      email,
+      password,
+    });
+
+    const response = await request(app).post("/api/v1/auth/login").send({
+      email,
+      password,
+    });
+
+    expect(response.status).toBe(200);
+
+    expect(response.headers["set-cookie"]).toBeDefined();
+    expect(response.headers["set-cookie"][0]).toContain("session=");
+    expect(response.headers["set-cookie"][0]).toContain("HttpOnly");
+
+    expect(response.body.user).toMatchObject({
+      id: expect.any(String),
+      email,
+    });
+
+    await db.delete(users).where(eq(users.email, email));
+  });
+
+  it("rejects incorrect credentials", async () => {
+    const email = `route-login-wrong-${Date.now()}@example.com`;
+
+    await request(app).post("/api/v1/auth/register").send({
+      email,
+      password: "password123",
+    });
+
+    const response = await request(app).post("/api/v1/auth/login").send({
+      email,
+      password: "wrong-password",
+    });
+
+    expect(response.status).toBe(401);
+
+    expect(response.body).toEqual({
+      error: {
+        code: "INVALID_CREDENTIALS",
+        message: "Invalid email or password",
+      },
+    });
+
+    await db.delete(users).where(eq(users.email, email));
+  });
+
+  it("rejects invalid login data", async () => {
+    const response = await request(app).post("/api/v1/auth/login").send({
+      email: "not-an-email",
+      password: "123",
+    });
+
+    expect(response.status).toBe(400);
+
+    expect(response.body).toEqual({
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Invalid request data",
       },
     });
   });
