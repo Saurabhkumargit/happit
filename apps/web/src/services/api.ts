@@ -77,3 +77,9 @@ export async function logout() {
     method: "POST",
   });
 }
+
+export async function deleteAccount() {
+  return apiRequest<void>("/api/v1/account", {
+    method: "DELETE",
+  });
+}
