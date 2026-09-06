@@ -1,23 +1,19 @@
 import request from "supertest";
 import { afterAll, describe, expect, it } from "vitest";
 import { loginUser } from "../modules/auth/auth.service.js";
-
+import crypto from "node:crypto";
 import app from "../app.js";
 import { db } from "../db/index.js";
 import { users } from "../db/schema.js";
 import { eq, or } from "drizzle-orm";
 
-const testEmail = "auth-test@example.com";
+const testEmail = `auth-test-${crypto.randomUUID()}@example.com`;
+const meTestEmail = `me-test-${crypto.randomUUID()}@example.com`;
 
 afterAll(async () => {
   await db
     .delete(users)
-    .where(
-      or(
-        eq(users.email, "auth-test@example.com"),
-        eq(users.email, "me-test@example.com"),
-      ),
-    );
+    .where(or(eq(users.email, testEmail), eq(users.email, meTestEmail)));
 });
 
 describe("POST /api/v1/auth/register", () => {
@@ -83,7 +79,7 @@ describe("authenticated requests", () => {
     const registerResponse = await request(app)
       .post("/api/v1/auth/register")
       .send({
-        email: "me-test@example.com",
+        email: meTestEmail,
         password: "password123",
       });
 
@@ -104,7 +100,7 @@ describe("authenticated requests", () => {
     expect(meResponse.body).toEqual({
       user: {
         id: expect.any(String),
-        email: "me-test@example.com",
+        email: meTestEmail,
         createdAt: expect.any(String),
       },
     });
@@ -129,7 +125,7 @@ describe("authenticated requests", () => {
 
 describe("loginUser", () => {
   it("logs in with valid credentials", async () => {
-    const email = `login-valid-${Date.now()}@example.com`;
+    const email = `login-valid-${crypto.randomUUID()}@example.com`;
     const password = "password123";
 
     await request(app).post("/api/v1/auth/register").send({
@@ -151,7 +147,7 @@ describe("loginUser", () => {
   });
 
   it("rejects an incorrect password", async () => {
-    const email = `login-wrong-password-${Date.now()}@example.com`;
+    const email = `login-wrong-password-${crypto.randomUUID()}@example.com`;
     const password = "password123";
 
     await request(app).post("/api/v1/auth/register").send({
@@ -175,7 +171,7 @@ describe("loginUser", () => {
   it("rejects a nonexistent user", async () => {
     await expect(
       loginUser({
-        email: `nonexistent-${Date.now()}@example.com`,
+        email: `nonexistent-${crypto.randomUUID()}@example.com`,
         password: "password123",
       }),
     ).rejects.toMatchObject({
@@ -187,7 +183,7 @@ describe("loginUser", () => {
 
 describe("POST /api/v1/auth/login", () => {
   it("logs in with valid credentials", async () => {
-    const email = `route-login-${Date.now()}@example.com`;
+    const email = `route-login-${crypto.randomUUID()}@example.com`;
     const password = "password123";
 
     await request(app).post("/api/v1/auth/register").send({
@@ -215,7 +211,7 @@ describe("POST /api/v1/auth/login", () => {
   });
 
   it("rejects incorrect credentials", async () => {
-    const email = `route-login-wrong-${Date.now()}@example.com`;
+    const email = `route-login-wrong-${crypto.randomUUID()}@example.com`;
 
     await request(app).post("/api/v1/auth/register").send({
       email,
@@ -258,7 +254,7 @@ describe("POST /api/v1/auth/login", () => {
 
 describe("POST /api/v1/auth/logout", () => {
   it("invalidates the current session", async () => {
-    const email = `logout-${Date.now()}@example.com`;
+    const email = `logout-${crypto.randomUUID()}@example.com`;
     const password = "password123";
 
     const loginResponse = await request(app)
@@ -314,7 +310,7 @@ describe("logout", () => {
     const registerResponse = await agent
       .post("/api/v1/auth/register")
       .send({
-        email: `logout-${Date.now()}@example.com`,
+        email: `logout-${crypto.randomUUID()}@example.com`,
         password: "password123",
       });
 
