@@ -5,6 +5,10 @@ import {
   logout,
   type User,
 } from "./services/api";
+import {
+  broadcastAuthEvent,
+  createAuthChannel,
+} from "./services/authChannel";
 import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
 
@@ -34,12 +38,34 @@ function App() {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+  const channel = createAuthChannel();
+
+  if (!channel) {
+    return;
+  }
+
+  channel.onmessage = (event) => {
+    if (
+      event.data === "LOGGED_OUT" ||
+      event.data === "ACCOUNT_DELETED"
+    ) {
+      setUser(null);
+    }
+  };
+
+  return () => {
+    channel.close();
+  };
+}, []);
+
   async function handleLogout() {
     setLogoutError(null);
 
     try {
       await logout();
       setUser(null);
+      broadcastAuthEvent("LOGGED_OUT");
     } catch (error) {
       setLogoutError(
         error instanceof Error
@@ -64,6 +90,7 @@ function App() {
   try {
     await deleteAccount();
     setUser(null);
+    broadcastAuthEvent("ACCOUNT_DELETED");
   } catch (error) {
     setDeleteError(
       error instanceof Error
