@@ -1,6 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
-async function apiRequest<T>(
+export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {

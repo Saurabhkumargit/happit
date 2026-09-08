@@ -5,7 +5,6 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import authRouter from "./modules/auth/auth.routes.js";
 import cookieParser from "cookie-parser";
 import accountRouter from "./modules/account/account.routes.js";
-import habitRouter from "./modules/habits/habit.routes.js";
 
 const app = express();
 
@@ -27,7 +26,6 @@ app.get("/api/v1/health", (_req, res) => {
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/account", accountRouter);
-app.use("/api/v1/habits", habitRouter);
 
 app.use(errorHandler);
 

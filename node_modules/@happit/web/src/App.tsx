@@ -11,6 +11,7 @@ import {
 } from "./services/authChannel";
 import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
+import HabitList from "./components/habits/HabitList";
 
 
 type AuthMode = "login" | "register";
@@ -125,6 +126,8 @@ function App() {
     <main>
       <h1>Happit</h1>
       <p>Welcome, {user.email}</p>
+
+      <HabitList />
 
       {logoutError && <p role="alert">{logoutError}</p>}
 
