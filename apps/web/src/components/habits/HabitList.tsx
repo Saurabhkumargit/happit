@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import {
+  archiveHabit,
   getHabits,
   type UserHabit,
 } from "../../services/habitApi";
@@ -32,6 +33,7 @@ function HabitList() {
   const [habits, setHabits] = useState<UserHabit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [archivingHabitId, setArchivingHabitId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadHabits() {
@@ -54,6 +56,27 @@ function HabitList() {
 
     loadHabits();
   }, []);
+
+  async function handleArchive(habitId: string) {
+    try {
+      setError(null);
+      setArchivingHabitId(habitId);
+
+      await archiveHabit(habitId);
+
+      setHabits((currentHabits) =>
+        currentHabits.filter((habit) => habit.habitId !== habitId),
+      );
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Unable to archive habit",
+      );
+    } finally {
+      setArchivingHabitId(null);
+    }
+  }
 
   if (isLoading) {
     return <p>Loading habits...</p>;
@@ -101,6 +124,16 @@ function HabitList() {
                 <strong>Target:</strong>{" "}
                 {formatTarget(habit)}
               </p>
+
+              <button
+                type="button"
+                onClick={() => handleArchive(userHabit.habitId)}
+                disabled={archivingHabitId === userHabit.habitId}
+              >
+                {archivingHabitId === userHabit.habitId
+                  ? "Archiving..."
+                  : "Archive"}
+              </button>
             </li>
           );
         })}

@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import HabitList from "../components/habits/HabitList";
-import { getHabits } from "../services/habitApi";
+import {
+  archiveHabit,
+  getHabits,
+} from "../services/habitApi";
 
 vi.mock("../services/habitApi", () => ({
   getHabits: vi.fn(),
+  archiveHabit: vi.fn(),
 }));
 
 const mockedGetHabits = vi.mocked(getHabits);
@@ -177,4 +180,51 @@ describe("HabitList", () => {
     expect(headings[0]).toHaveTextContent("Read");
     expect(headings[1]).toHaveTextContent("Exercise");
   });
+
+  it("archives a habit and removes it from the active list", async () => {
+  mockedGetHabits.mockResolvedValue([baseHabit]);
+  vi.mocked(archiveHabit).mockResolvedValue({
+    ...baseHabit,
+    status: "ARCHIVED",
+    archivedAt: "2026-09-09T00:00:00.000Z",
+  });
+
+  render(<HabitList />);
+
+  expect(
+    await screen.findByRole("heading", { name: "Read" }),
+  ).toBeInTheDocument();
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Archive" }),
+  );
+
+  expect(archiveHabit).toHaveBeenCalledWith("habit-1");
+
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("heading", { name: "Read" }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+it("shows an error when archiving fails", async () => {
+  mockedGetHabits.mockResolvedValue([baseHabit]);
+
+  vi.mocked(archiveHabit).mockRejectedValue(
+    new Error("Unable to archive habit"),
+  );
+
+  render(<HabitList />);
+
+  await screen.findByRole("heading", { name: "Read" });
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Archive" }),
+  );
+
+  expect(
+    await screen.findByRole("alert"),
+  ).toHaveTextContent("Unable to archive habit");
+});
 });
