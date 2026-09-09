@@ -2,16 +2,35 @@ import crypto from "node:crypto";
 
 import request from "supertest";
 import { afterAll, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
 
 import app from "../app.js";
 import { db } from "../db/index.js";
 import { users } from "../db/schema.js";
+
+const testEmails: string[] = [];
+
+afterAll(async () => {
+  for (const email of testEmails) {
+    const [user] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    if (user) {
+      await db.delete(users).where(eq(users.id, user.id));
+    }
+  }
+});
 
 async function createAuthenticatedAgent() {
   const agent = request.agent(app);
 
   const email = `habit-archive-${crypto.randomUUID()}@example.com`;
   const password = "test-password";
+
+  testEmails.push(email);
 
   await agent
     .post("/api/v1/auth/register")
@@ -37,9 +56,6 @@ async function getExerciseId(agent: ReturnType<typeof request.agent>) {
 }
 
 describe("POST /api/v1/habits/:habitId/archive", () => {
-  afterAll(async () => {
-    await db.delete(users);
-  });
 
   it("requires authentication", async () => {
     await request(app)

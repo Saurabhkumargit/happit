@@ -270,3 +270,68 @@ export async function deleteUserHabit(
 
   return userHabit;
 }
+
+export async function reorderUserHabits(
+  userId: string,
+  habitIds: string[],
+) {
+  return db.transaction(async (tx) => {
+    const userHabitsToReorder = await tx
+      .select({
+        id: userHabits.id,
+        habitId: userHabits.habitId,
+        status: userHabits.status,
+      })
+      .from(userHabits)
+      .where(eq(userHabits.userId, userId));
+
+    const activeHabits = userHabitsToReorder.filter(
+      (habit) => habit.status === "ACTIVE",
+    );
+
+    if (
+      habitIds.length !== activeHabits.length ||
+      habitIds.some(
+        (habitId) =>
+          !activeHabits.some(
+            (habit) => habit.habitId === habitId,
+          ),
+      )
+    ) {
+      throw new AppError(
+        400,
+        "INVALID_HABIT_ORDER",
+        "Habit order must contain exactly all active habits",
+      );
+    }
+
+    const now = new Date();
+
+    for (const [sortOrder, habitId] of habitIds.entries()) {
+      await tx
+        .update(userHabits)
+        .set({
+          sortOrder,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(userHabits.userId, userId),
+            eq(userHabits.habitId, habitId),
+          ),
+        );
+    }
+
+    return tx
+      .select({
+        id: userHabits.id,
+        habitId: userHabits.habitId,
+        status: userHabits.status,
+        sortOrder: userHabits.sortOrder,
+        archivedAt: userHabits.archivedAt,
+      })
+      .from(userHabits)
+      .where(eq(userHabits.userId, userId))
+      .orderBy(userHabits.sortOrder);
+  });
+}

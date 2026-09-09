@@ -24,16 +24,18 @@ afterAll(async () => {
 });
 
 async function createAuthenticatedAgent() {
-  const email = `habit-adoption-${crypto.randomUUID()}@example.com`;
-  testEmails.push(email);
-
   const agent = request.agent(app);
+
+  const email = `habit-adoption-${crypto.randomUUID()}@example.com`;
+  const password = "test-password";
+
+  testEmails.push(email);
 
   await agent
     .post("/api/v1/auth/register")
     .send({
       email,
-      password: "password123",
+      password,
     })
     .expect(201);
 

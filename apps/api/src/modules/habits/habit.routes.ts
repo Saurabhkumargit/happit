@@ -7,10 +7,14 @@ import {
   getUserHabitById,
   listCatalogHabits,
   listUserHabits,
+  reorderUserHabits,
   restoreUserHabit,
 } from "./habit.service.js";
 import { requireAuth } from "../../middleware/auth.js";
-import { adoptHabitSchema } from "./habit.validation.js";
+import {
+  adoptHabitSchema,
+  reorderHabitsSchema,
+} from "./habit.validation.js";
 
 const router = Router();
 
@@ -103,6 +107,33 @@ router.delete("/:habitId", requireAuth, async (req, res, next) => {
     );
 
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch("/reorder", requireAuth, async (req, res, next) => {
+  try {
+    const parsed = reorderHabitsSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid request data",
+        },
+      });
+      return;
+    }
+
+    const habits = await reorderUserHabits(
+      req.user!.id,
+      parsed.data.habitIds,
+    );
+
+    res.json({
+      habits,
+    });
   } catch (error) {
     next(error);
   }
