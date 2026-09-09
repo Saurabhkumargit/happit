@@ -11,21 +11,29 @@ vi.mock("../services/habitApi", () => ({
 const mockedGetHabits = vi.mocked(getHabits);
 
 const baseHabit = {
-  id: "habit-1",
+  id: "user-habit-1",
   userId: "user-1",
-  name: "Read",
-  description: "Read for personal growth",
-  scheduleType: "DAILY" as const,
-  scheduleConfig: {},
-  targetType: "DURATION" as const,
-  targetValue: "30",
-  targetUnit: "minutes",
-  startDate: "2026-09-08T00:00:00.000Z",
+  habitId: "habit-1",
   status: "ACTIVE" as const,
+  startDate: "2026-09-08T00:00:00.000Z",
   sortOrder: 0,
   createdAt: "2026-09-08T00:00:00.000Z",
   updatedAt: "2026-09-08T00:00:00.000Z",
   archivedAt: null,
+  habit: {
+    id: "habit-1",
+    key: "reading",
+    name: "Read",
+    description: "Read for personal growth",
+    scheduleType: "DAILY" as const,
+    scheduleConfig: {},
+    targetType: "DURATION" as const,
+    targetValue: "30",
+    targetUnit: "minutes",
+    status: "AVAILABLE" as const,
+    createdAt: "2026-09-08T00:00:00.000Z",
+    updatedAt: "2026-09-08T00:00:00.000Z",
+  },
 };
 
 describe("HabitList", () => {
@@ -62,9 +70,12 @@ describe("HabitList", () => {
     mockedGetHabits.mockResolvedValue([
       {
         ...baseHabit,
-        scheduleType: "WEEKDAYS",
-        scheduleConfig: {
-          weekdays: [1, 3, 5],
+        habit: {
+          ...baseHabit.habit,
+          scheduleType: "WEEKDAYS",
+          scheduleConfig: {
+            weekdays: [1, 3, 5],
+          },
         },
       },
     ]);
@@ -82,9 +93,12 @@ describe("HabitList", () => {
     mockedGetHabits.mockResolvedValue([
       {
         ...baseHabit,
-        scheduleType: "WEEKLY_TARGET",
-        scheduleConfig: {
-          occurrences: 3,
+        habit: {
+          ...baseHabit.habit,
+          scheduleType: "WEEKLY_TARGET",
+          scheduleConfig: {
+            occurrences: 3,
+          },
         },
       },
     ]);
@@ -128,16 +142,28 @@ describe("HabitList", () => {
     mockedGetHabits.mockResolvedValue([
       {
         ...baseHabit,
-        id: "habit-1",
-        name: "Read",
+        id: "user-habit-1",
+        habitId: "habit-1",
         sortOrder: 0,
+        habit: {
+          ...baseHabit.habit,
+          id: "habit-1",
+          key: "reading",
+          name: "Read",
+        },
       },
       {
         ...baseHabit,
-        id: "habit-2",
-        name: "Exercise",
-        description: null,
+        id: "user-habit-2",
+        habitId: "habit-2",
         sortOrder: 1,
+        habit: {
+          ...baseHabit.habit,
+          id: "habit-2",
+          key: "exercise",
+          name: "Exercise",
+          description: "",
+        },
       },
     ]);
 

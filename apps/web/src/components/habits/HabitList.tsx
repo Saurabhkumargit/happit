@@ -2,25 +2,25 @@ import { useEffect, useState } from "react";
 
 import {
   getHabits,
-  type Habit,
+  type UserHabit,
 } from "../../services/habitApi";
 
-function formatSchedule(habit: Habit) {
+function formatSchedule(habit: UserHabit["habit"]) {
   switch (habit.scheduleType) {
     case "DAILY":
       return "Every day";
 
     case "WEEKDAYS":
       return `Weekdays: ${(
-        habit.scheduleConfig.weekdays as number[]
+        habit.scheduleConfig.weekdays ?? []
       ).join(", ")}`;
 
     case "WEEKLY_TARGET":
-      return `${habit.scheduleConfig.occurrences} times per week`;
+      return `${habit.scheduleConfig.occurrences ?? 0} times per week`;
   }
 }
 
-function formatTarget(habit: Habit) {
+function formatTarget(habit: UserHabit["habit"]) {
   const unit = habit.targetUnit
     ? ` ${habit.targetUnit}`
     : "";
@@ -29,7 +29,7 @@ function formatTarget(habit: Habit) {
 }
 
 function HabitList() {
-  const [habits, setHabits] = useState<Habit[]>([]);
+  const [habits, setHabits] = useState<UserHabit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,25 +81,29 @@ function HabitList() {
       <h2>Your habits</h2>
 
       <ul>
-        {habits.map((habit) => (
-          <li key={habit.id}>
-            <h3>{habit.name}</h3>
+        {habits.map((userHabit) => {
+          const habit = userHabit.habit;
 
-            {habit.description && (
-              <p>{habit.description}</p>
-            )}
+          return (
+            <li key={userHabit.id}>
+              <h3>{habit.name}</h3>
 
-            <p>
-              <strong>Schedule:</strong>{" "}
-              {formatSchedule(habit)}
-            </p>
+              {habit.description && (
+                <p>{habit.description}</p>
+              )}
 
-            <p>
-              <strong>Target:</strong>{" "}
-              {formatTarget(habit)}
-            </p>
-          </li>
-        ))}
+              <p>
+                <strong>Schedule:</strong>{" "}
+                {formatSchedule(habit)}
+              </p>
+
+              <p>
+                <strong>Target:</strong>{" "}
+                {formatTarget(habit)}
+              </p>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

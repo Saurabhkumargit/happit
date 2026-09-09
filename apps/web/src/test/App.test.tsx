@@ -3,8 +3,21 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 
 import App from "../App";
 import * as api from "../services/api";
+import { getCatalogHabits } from "../services/habitApi";
 
 vi.mock("../services/api");
+
+vi.mock("../services/habitApi", () => ({
+  getHabits: vi.fn().mockResolvedValue([]),
+  getCatalogHabits: vi.fn().mockResolvedValue([]),
+  adoptHabit: vi.fn(),
+  archiveHabit: vi.fn(),
+  restoreHabit: vi.fn(),
+  deleteHabit: vi.fn(),
+  reorderHabits: vi.fn(),
+  getHabit: vi.fn(),
+  getCatalogHabit: vi.fn(),
+}));
 class MockBroadcastChannel {
   static instances: MockBroadcastChannel[] = [];
 
@@ -33,7 +46,10 @@ vi.stubGlobal("BroadcastChannel", MockBroadcastChannel);
 
 describe("App authentication", () => {
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
+
+    vi.mocked(api.getCurrentUser).mockReset();
+
     MockBroadcastChannel.instances = [];
   });
 
@@ -180,4 +196,53 @@ describe("App authentication", () => {
       await screen.findByRole("button", { name: "Log in" }),
     ).toBeInTheDocument();
   });
+
+  it("switches between my habits and the habit catalog", async () => {
+  const user = {
+    id: "user-123",
+    email: "test@example.com",
+    createdAt: "2026-09-07T00:00:00.000Z",
+  };
+
+  vi.mocked(api.getCurrentUser).mockResolvedValue({ user });
+
+  vi.mocked(getCatalogHabits).mockResolvedValue([
+    {
+      id: "habit-1",
+      key: "reading",
+      name: "Reading",
+      description: "Read for personal growth",
+      scheduleType: "DAILY",
+      scheduleConfig: {},
+      targetType: "DURATION",
+      targetValue: "30",
+      targetUnit: "minutes",
+      status: "AVAILABLE",
+      createdAt: "2026-09-08T00:00:00.000Z",
+      updatedAt: "2026-09-08T00:00:00.000Z",
+    },
+  ]);
+
+  render(<App />);
+
+  expect(
+    await screen.findByRole("heading", { name: "Your habits" }),
+  ).toBeInTheDocument();
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Habit catalog" }),
+  );
+
+  expect(
+    await screen.findByRole("heading", { name: "Choose your habits" }),
+  ).toBeInTheDocument();
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "My habits" }),
+  );
+
+  expect(
+    await screen.findByRole("heading", { name: "Your habits" }),
+  ).toBeInTheDocument();
+});
 });

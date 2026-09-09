@@ -10,79 +10,93 @@ export type HabitTargetType =
   | "DURATION"
   | "QUANTITY";
 
-export type HabitStatus =
+export type CatalogHabitStatus =
+  | "AVAILABLE"
+  | "UNAVAILABLE";
+
+export type UserHabitStatus =
   | "ACTIVE"
   | "ARCHIVED";
 
-export interface DailyScheduleConfig {
-  scheduleType: "DAILY";
-  scheduleConfig: Record<string, never>;
+export interface HabitScheduleConfig {
+  weekdays?: number[];
+  occurrences?: number;
 }
 
-export interface WeekdaysScheduleConfig {
-  scheduleType: "WEEKDAYS";
-  scheduleConfig: {
-    weekdays: number[];
-  };
-}
-
-export interface WeeklyTargetScheduleConfig {
-  scheduleType: "WEEKLY_TARGET";
-  scheduleConfig: {
-    occurrences: number;
-  };
-}
-
-export type HabitSchedule =
-  | DailyScheduleConfig
-  | WeekdaysScheduleConfig
-  | WeeklyTargetScheduleConfig;
-
-export interface Habit {
+export interface CatalogHabit {
   id: string;
-  userId: string;
+  key: string;
   name: string;
-  description: string | null;
+  description: string;
   scheduleType: HabitScheduleType;
-  scheduleConfig: Record<string, unknown>;
+  scheduleConfig: HabitScheduleConfig;
   targetType: HabitTargetType;
   targetValue: string;
-  targetUnit: string | null;
+  targetUnit: string;
+  status: CatalogHabitStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserHabit {
+  id: string;
+  userId: string;
+  habitId: string;
+  status: UserHabitStatus;
   startDate: string;
-  status: HabitStatus;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  habit: CatalogHabit;
 }
 
-export interface CreateHabitInput {
-  name: string;
-  description?: string;
-  scheduleType: HabitScheduleType;
-  scheduleConfig: Record<string, unknown>;
-  targetType: HabitTargetType;
-  targetValue: number;
-  targetUnit?: string;
-  startDate: string;
+interface CatalogHabitsResponse {
+  habits: CatalogHabit[];
 }
 
-export type UpdateHabitInput = CreateHabitInput;
-
-interface HabitResponse {
-  habit: Habit;
+interface CatalogHabitResponse {
+  habit: CatalogHabit;
 }
 
-interface HabitsResponse {
-  habits: Habit[];
+interface UserHabitsResponse {
+  habits: UserHabit[];
+}
+
+interface UserHabitResponse {
+  habit: UserHabit;
+}
+
+interface AdoptHabitInput {
+  habitId: string;
 }
 
 interface ReorderHabitsInput {
   habitIds: string[];
 }
 
-export async function createHabit(input: CreateHabitInput) {
-  const response = await apiRequest<HabitResponse>(
+export async function getCatalogHabits() {
+  const response = await apiRequest<CatalogHabitsResponse>(
+    "/api/v1/habits/catalog",
+  );
+
+  return response.habits;
+}
+
+export async function getCatalogHabit(habitId: string) {
+  const response = await apiRequest<CatalogHabitResponse>(
+    `/api/v1/habits/catalog/${habitId}`,
+  );
+
+  return response.habit;
+}
+
+export async function adoptHabit(habitId: string) {
+  const input: AdoptHabitInput = {
+    habitId,
+  };
+
+  const response = await apiRequest<UserHabitResponse>(
     "/api/v1/habits",
     {
       method: "POST",
@@ -94,7 +108,7 @@ export async function createHabit(input: CreateHabitInput) {
 }
 
 export async function getHabits() {
-  const response = await apiRequest<HabitsResponse>(
+  const response = await apiRequest<UserHabitsResponse>(
     "/api/v1/habits",
   );
 
@@ -102,30 +116,15 @@ export async function getHabits() {
 }
 
 export async function getHabit(habitId: string) {
-  const response = await apiRequest<HabitResponse>(
+  const response = await apiRequest<UserHabitResponse>(
     `/api/v1/habits/${habitId}`,
-  );
-
-  return response.habit;
-}
-
-export async function updateHabit(
-  habitId: string,
-  input: UpdateHabitInput,
-) {
-  const response = await apiRequest<HabitResponse>(
-    `/api/v1/habits/${habitId}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(input),
-    },
   );
 
   return response.habit;
 }
 
 export async function archiveHabit(habitId: string) {
-  const response = await apiRequest<HabitResponse>(
+  const response = await apiRequest<UserHabitResponse>(
     `/api/v1/habits/${habitId}/archive`,
     {
       method: "POST",
@@ -136,7 +135,7 @@ export async function archiveHabit(habitId: string) {
 }
 
 export async function restoreHabit(habitId: string) {
-  const response = await apiRequest<HabitResponse>(
+  const response = await apiRequest<UserHabitResponse>(
     `/api/v1/habits/${habitId}/restore`,
     {
       method: "POST",
@@ -160,7 +159,7 @@ export async function reorderHabits(habitIds: string[]) {
     habitIds,
   };
 
-  const response = await apiRequest<HabitsResponse>(
+  const response = await apiRequest<UserHabitsResponse>(
     "/api/v1/habits/reorder",
     {
       method: "PATCH",
