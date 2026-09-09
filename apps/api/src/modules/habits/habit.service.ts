@@ -194,3 +194,54 @@ export async function archiveUserHabit(
 
   return updatedUserHabit;
 }
+
+export async function restoreUserHabit(
+  userId: string,
+  habitId: string,
+) {
+  const [userHabit] = await db
+    .select()
+    .from(userHabits)
+    .where(
+      and(
+        eq(userHabits.userId, userId),
+        eq(userHabits.habitId, habitId),
+      ),
+    )
+    .limit(1);
+
+  if (!userHabit) {
+    throw new AppError(
+      404,
+      "HABIT_NOT_FOUND",
+      "Habit not found",
+    );
+  }
+
+  if (userHabit.status === "ACTIVE") {
+    throw new AppError(
+      409,
+      "HABIT_ALREADY_ACTIVE",
+      "Habit is already active",
+    );
+  }
+
+  const now = new Date();
+
+  const [updatedUserHabit] = await db
+    .update(userHabits)
+    .set({
+      status: "ACTIVE",
+      archivedAt: null,
+      updatedAt: now,
+    })
+    .where(
+      and(
+        eq(userHabits.userId, userId),
+        eq(userHabits.habitId, habitId),
+      ),
+    )
+    .returning();
+
+  return updatedUserHabit;
+}

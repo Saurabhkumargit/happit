@@ -6,6 +6,7 @@ import {
   getUserHabitById,
   listCatalogHabits,
   listUserHabits,
+  restoreUserHabit,
 } from "./habit.service.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { adoptHabitSchema } from "./habit.validation.js";
@@ -66,6 +67,21 @@ router.get("/", requireAuth, async (req, res, next) => {
 router.post("/:habitId/archive", requireAuth, async (req, res, next) => {
   try {
     const habit = await archiveUserHabit(
+      req.user!.id,
+      req.params.habitId as string,
+    );
+
+    res.json({
+      habit,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/:habitId/restore", requireAuth, async (req, res, next) => {
+  try {
+    const habit = await restoreUserHabit(
       req.user!.id,
       req.params.habitId as string,
     );
