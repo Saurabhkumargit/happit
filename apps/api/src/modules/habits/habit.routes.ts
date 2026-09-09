@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   adoptHabit,
   archiveUserHabit,
+  deleteUserHabit,
   getCatalogHabitById,
   getUserHabitById,
   listCatalogHabits,
@@ -89,6 +90,19 @@ router.post("/:habitId/restore", requireAuth, async (req, res, next) => {
     res.json({
       habit,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/:habitId", requireAuth, async (req, res, next) => {
+  try {
+    await deleteUserHabit(
+      req.user!.id,
+      req.params.habitId as string,
+    );
+
+    res.status(204).send();
   } catch (error) {
     next(error);
   }

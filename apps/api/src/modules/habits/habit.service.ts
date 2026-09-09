@@ -245,3 +245,28 @@ export async function restoreUserHabit(
 
   return updatedUserHabit;
 }
+
+export async function deleteUserHabit(
+  userId: string,
+  habitId: string,
+) {
+  const [userHabit] = await db
+    .delete(userHabits)
+    .where(
+      and(
+        eq(userHabits.userId, userId),
+        eq(userHabits.habitId, habitId),
+      ),
+    )
+    .returning();
+
+  if (!userHabit) {
+    throw new AppError(
+      404,
+      "HABIT_NOT_FOUND",
+      "Habit not found",
+    );
+  }
+
+  return userHabit;
+}
