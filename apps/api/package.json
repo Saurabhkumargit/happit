@@ -33,12 +33,13 @@
     "vitest": "^4.1.11"
   },
   "dependencies": {
-    "argon2": "^0.45.1",
+    "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
+    "hash-wasm": "^4.12.0",
     "pg": "^8.23.0",
     "zod": "^4.5.2"
   }

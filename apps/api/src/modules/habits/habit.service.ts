@@ -93,3 +93,104 @@ export async function adoptHabit(userId: string, habitId: string) {
     habit,
   };
 }
+
+export async function listUserHabits(userId: string) {
+  return db
+    .select({
+      id: userHabits.id,
+      userId: userHabits.userId,
+      habitId: userHabits.habitId,
+      status: userHabits.status,
+      startDate: userHabits.startDate,
+      sortOrder: userHabits.sortOrder,
+      createdAt: userHabits.createdAt,
+      updatedAt: userHabits.updatedAt,
+      archivedAt: userHabits.archivedAt,
+      habit: habits,
+    })
+    .from(userHabits)
+    .innerJoin(habits, eq(userHabits.habitId, habits.id))
+    .where(eq(userHabits.userId, userId))
+    .orderBy(userHabits.sortOrder);
+}
+
+export async function getUserHabitById(
+  userId: string,
+  habitId: string,
+) {
+  const [userHabit] = await db
+    .select({
+      id: userHabits.id,
+      userId: userHabits.userId,
+      habitId: userHabits.habitId,
+      status: userHabits.status,
+      startDate: userHabits.startDate,
+      sortOrder: userHabits.sortOrder,
+      createdAt: userHabits.createdAt,
+      updatedAt: userHabits.updatedAt,
+      archivedAt: userHabits.archivedAt,
+      habit: habits,
+    })
+    .from(userHabits)
+    .innerJoin(habits, eq(userHabits.habitId, habits.id))
+    .where(
+      and(
+        eq(userHabits.userId, userId),
+        eq(userHabits.habitId, habitId),
+      ),
+    )
+    .limit(1);
+
+  return userHabit ?? null;
+}
+
+export async function archiveUserHabit(
+  userId: string,
+  habitId: string,
+) {
+  const [userHabit] = await db
+    .select()
+    .from(userHabits)
+    .where(
+      and(
+        eq(userHabits.userId, userId),
+        eq(userHabits.habitId, habitId),
+      ),
+    )
+    .limit(1);
+
+  if (!userHabit) {
+    throw new AppError(
+      404,
+      "HABIT_NOT_FOUND",
+      "Habit not found",
+    );
+  }
+
+  if (userHabit.status === "ARCHIVED") {
+    throw new AppError(
+      409,
+      "HABIT_ALREADY_ARCHIVED",
+      "Habit has already been archived",
+    );
+  }
+
+  const now = new Date();
+
+  const [updatedUserHabit] = await db
+    .update(userHabits)
+    .set({
+      status: "ARCHIVED",
+      archivedAt: now,
+      updatedAt: now,
+    })
+    .where(
+      and(
+        eq(userHabits.userId, userId),
+        eq(userHabits.habitId, habitId),
+      ),
+    )
+    .returning();
+
+  return updatedUserHabit;
+}
