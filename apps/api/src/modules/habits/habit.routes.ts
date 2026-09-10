@@ -139,6 +139,28 @@ router.patch("/reorder", requireAuth, async (req, res, next) => {
   }
 });
 
+router.get("/catalog/:habitId", async (req, res, next) => {
+  try {
+    const habit = await getCatalogHabitById(req.params.habitId);
+
+    if (!habit) {
+      res.status(404).json({
+        error: {
+          code: "HABIT_NOT_FOUND",
+          message: "Habit not found",
+        },
+      });
+      return;
+    }
+
+    res.json({
+      habit,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/:habitId", requireAuth, async (req, res, next) => {
   try {
     const habit = await getUserHabitById(
@@ -164,26 +186,5 @@ router.get("/:habitId", requireAuth, async (req, res, next) => {
   }
 });
 
-router.get("/catalog/:habitId", async (req, res, next) => {
-  try {
-    const habit = await getCatalogHabitById(req.params.habitId);
-
-    if (!habit) {
-      res.status(404).json({
-        error: {
-          code: "HABIT_NOT_FOUND",
-          message: "Habit not found",
-        },
-      });
-      return;
-    }
-
-    res.json({
-      habit,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
 
 export default router;
