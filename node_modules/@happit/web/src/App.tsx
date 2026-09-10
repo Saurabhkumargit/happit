@@ -10,9 +10,11 @@ import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
 import HabitList from "./components/habits/HabitList";
 import HabitCatalog from "./components/habits/HabitCatalog";
+import ArchivedHabitList from "./components/habits/ArchivedHabitList";
+import HabitDetail from "./components/habits/HabitDetail";
 
 type AuthMode = "login" | "register";
-type AppView = "habits" | "catalog";
+type AppView = "habits" | "catalog" | "archived" | "detail";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -22,6 +24,7 @@ function App() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [appView, setAppView] = useState<AppView>("habits");
+  const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkAuth() {
@@ -136,10 +139,32 @@ function App() {
           >
             Habit catalog
           </button>
+
+          <button
+            type="button"
+            onClick={() => setAppView("archived")}
+            aria-current={appView === "archived" ? "page" : undefined}
+          >
+            Archived
+          </button>
         </nav>
 
-        {appView === "habits" ? <HabitList /> : <HabitCatalog />}
-
+        {appView === "habits" && (
+          <HabitList
+            onSelectHabit={(habitId) => {
+              setSelectedHabitId(habitId);
+              setAppView("detail");
+            }}
+          />
+        )}
+        {appView === "detail" && selectedHabitId && (
+          <HabitDetail
+            habitId={selectedHabitId}
+            onArchived={() => setAppView("archived")}
+          />
+        )}
+        {appView === "catalog" && <HabitCatalog />}
+        {appView === "archived" && <ArchivedHabitList />}
         {logoutError && <p role="alert">{logoutError}</p>}
 
         <button type="button" onClick={handleLogout}>
@@ -154,6 +179,10 @@ function App() {
           disabled={isDeleting}
         >
           {isDeleting ? "Deleting account..." : "Delete account"}
+        </button>
+
+        <button type="button" onClick={() => setAppView("habits")}>
+          Back to my habits
         </button>
       </main>
     );

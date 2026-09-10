@@ -1,17 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import HabitList from "../components/habits/HabitList";
-import {
-  archiveHabit,
-  getHabits,
-} from "../services/habitApi";
+import { archiveHabit, getHabits, reorderHabits } from "../services/habitApi";
 
 vi.mock("../services/habitApi", () => ({
-  getHabits: vi.fn(),
   archiveHabit: vi.fn(),
+  getHabits: vi.fn(),
+  reorderHabits: vi.fn(),
 }));
 
 const mockedGetHabits = vi.mocked(getHabits);
+const mockedReorderHabits = vi.mocked(reorderHabits);
 
 const baseHabit = {
   id: "user-habit-1",
@@ -61,9 +60,7 @@ describe("HabitList", () => {
       await screen.findByRole("heading", { name: "Read" }),
     ).toBeInTheDocument();
 
-    expect(
-      screen.getByText("Read for personal growth"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Read for personal growth")).toBeInTheDocument();
 
     expect(screen.getByText(/Every day/)).toBeInTheDocument();
     expect(screen.getByText(/30 minutes/)).toBeInTheDocument();
@@ -86,9 +83,7 @@ describe("HabitList", () => {
     render(<HabitList />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText("Weekdays: 1, 3, 5"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Weekdays: 1, 3, 5")).toBeInTheDocument();
     });
   });
 
@@ -109,9 +104,7 @@ describe("HabitList", () => {
     render(<HabitList />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText("3 times per week"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("3 times per week")).toBeInTheDocument();
     });
   });
 
@@ -121,9 +114,7 @@ describe("HabitList", () => {
     render(<HabitList />);
 
     expect(
-      await screen.findByText(
-        "You don't have any active habits yet.",
-      ),
+      await screen.findByText("You don't have any active habits yet."),
     ).toBeInTheDocument();
   });
 
@@ -134,9 +125,7 @@ describe("HabitList", () => {
 
     render(<HabitList />);
 
-    expect(
-      await screen.findByRole("alert"),
-    ).toHaveTextContent(
+    expect(await screen.findByRole("alert")).toHaveTextContent(
       "Unable to connect to the server",
     );
   });
@@ -182,49 +171,202 @@ describe("HabitList", () => {
   });
 
   it("archives a habit and removes it from the active list", async () => {
-  mockedGetHabits.mockResolvedValue([baseHabit]);
-  vi.mocked(archiveHabit).mockResolvedValue({
-    ...baseHabit,
-    status: "ARCHIVED",
-    archivedAt: "2026-09-09T00:00:00.000Z",
-  });
+    mockedGetHabits.mockResolvedValue([baseHabit]);
+    vi.mocked(archiveHabit).mockResolvedValue({
+      ...baseHabit,
+      status: "ARCHIVED",
+      archivedAt: "2026-09-09T00:00:00.000Z",
+    });
 
-  render(<HabitList />);
+    render(<HabitList />);
 
-  expect(
-    await screen.findByRole("heading", { name: "Read" }),
-  ).toBeInTheDocument();
-
-  fireEvent.click(
-    screen.getByRole("button", { name: "Archive" }),
-  );
-
-  expect(archiveHabit).toHaveBeenCalledWith("habit-1");
-
-  await waitFor(() => {
     expect(
-      screen.queryByRole("heading", { name: "Read" }),
-    ).not.toBeInTheDocument();
+      await screen.findByRole("heading", { name: "Read" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+
+    expect(archiveHabit).toHaveBeenCalledWith("habit-1");
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: "Read" }),
+      ).not.toBeInTheDocument();
+    });
   });
-});
 
-it("shows an error when archiving fails", async () => {
-  mockedGetHabits.mockResolvedValue([baseHabit]);
+  it("shows an error when archiving fails", async () => {
+    mockedGetHabits.mockResolvedValue([baseHabit]);
 
-  vi.mocked(archiveHabit).mockRejectedValue(
-    new Error("Unable to archive habit"),
-  );
+    vi.mocked(archiveHabit).mockRejectedValue(
+      new Error("Unable to archive habit"),
+    );
 
-  render(<HabitList />);
+    render(<HabitList />);
 
-  await screen.findByRole("heading", { name: "Read" });
+    await screen.findByRole("heading", { name: "Read" });
 
-  fireEvent.click(
-    screen.getByRole("button", { name: "Archive" }),
-  );
+    fireEvent.click(screen.getByRole("button", { name: "Archive" }));
 
-  expect(
-    await screen.findByRole("alert"),
-  ).toHaveTextContent("Unable to archive habit");
-});
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Unable to archive habit",
+    );
+  });
+
+  it("renders reorder controls", async () => {
+    mockedGetHabits.mockResolvedValue([
+      baseHabit,
+      {
+        ...baseHabit,
+        id: "user-habit-2",
+        habitId: "habit-2",
+        habit: {
+          ...baseHabit.habit,
+          id: "habit-2",
+          key: "exercise",
+          name: "Exercise",
+        },
+      },
+    ]);
+
+    render(<HabitList />);
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Move Read up",
+      }),
+    ).toBeDisabled();
+
+    expect(
+      screen.getByRole("button", {
+        name: "Move Read down",
+      }),
+    ).toBeEnabled();
+
+    expect(
+      screen.getByRole("button", {
+        name: "Move Exercise down",
+      }),
+    ).toBeDisabled();
+  });
+
+  it("moves a habit up and saves the complete order", async () => {
+    const secondHabit = {
+      ...baseHabit,
+      id: "user-habit-2",
+      habitId: "habit-2",
+      sortOrder: 1,
+      habit: {
+        ...baseHabit.habit,
+        id: "habit-2",
+        key: "exercise",
+        name: "Exercise",
+      },
+    };
+
+    mockedGetHabits.mockResolvedValue([baseHabit, secondHabit]);
+    mockedReorderHabits.mockResolvedValue([secondHabit, baseHabit]);
+
+    render(<HabitList />);
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Move Exercise up",
+      }),
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Exercise",
+      }),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(mockedReorderHabits).toHaveBeenCalledWith([
+        "user-habit-2",
+        "user-habit-1",
+      ]);
+    });
+
+    const headings = screen.getAllByRole("heading", { level: 3 });
+
+    expect(headings[0]).toHaveTextContent("Exercise");
+    expect(headings[1]).toHaveTextContent("Read");
+  });
+
+  it("moves a habit down and saves the complete order", async () => {
+    const secondHabit = {
+      ...baseHabit,
+      id: "user-habit-2",
+      habitId: "habit-2",
+      sortOrder: 1,
+      habit: {
+        ...baseHabit.habit,
+        id: "habit-2",
+        key: "exercise",
+        name: "Exercise",
+      },
+    };
+
+    mockedGetHabits.mockResolvedValue([baseHabit, secondHabit]);
+    mockedReorderHabits.mockResolvedValue([secondHabit, baseHabit]);
+
+    render(<HabitList />);
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Move Read down",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(mockedReorderHabits).toHaveBeenCalledWith([
+        "user-habit-2",
+        "user-habit-1",
+      ]);
+    });
+
+    const headings = screen.getAllByRole("heading", { level: 3 });
+
+    expect(headings[0]).toHaveTextContent("Exercise");
+    expect(headings[1]).toHaveTextContent("Read");
+  });
+
+  it("reverts the order when reordering fails", async () => {
+    const secondHabit = {
+      ...baseHabit,
+      id: "user-habit-2",
+      habitId: "habit-2",
+      sortOrder: 1,
+      habit: {
+        ...baseHabit.habit,
+        id: "habit-2",
+        key: "exercise",
+        name: "Exercise",
+      },
+    };
+
+    mockedGetHabits.mockResolvedValue([baseHabit, secondHabit]);
+
+    mockedReorderHabits.mockRejectedValue(
+      new Error("Unable to reorder habits"),
+    );
+
+    render(<HabitList />);
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Move Read down",
+      }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Unable to reorder habits",
+    );
+
+    const headings = screen.getAllByRole("heading", { level: 3 });
+
+    expect(headings[0]).toHaveTextContent("Read");
+    expect(headings[1]).toHaveTextContent("Exercise");
+  });
 });

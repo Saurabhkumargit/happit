@@ -198,51 +198,75 @@ describe("App authentication", () => {
   });
 
   it("switches between my habits and the habit catalog", async () => {
-  const user = {
-    id: "user-123",
-    email: "test@example.com",
-    createdAt: "2026-09-07T00:00:00.000Z",
-  };
+    const user = {
+      id: "user-123",
+      email: "test@example.com",
+      createdAt: "2026-09-07T00:00:00.000Z",
+    };
 
-  vi.mocked(api.getCurrentUser).mockResolvedValue({ user });
+    vi.mocked(api.getCurrentUser).mockResolvedValue({ user });
 
-  vi.mocked(getCatalogHabits).mockResolvedValue([
-    {
-      id: "habit-1",
-      key: "reading",
-      name: "Reading",
-      description: "Read for personal growth",
-      scheduleType: "DAILY",
-      scheduleConfig: {},
-      targetType: "DURATION",
-      targetValue: "30",
-      targetUnit: "minutes",
-      status: "AVAILABLE",
-      createdAt: "2026-09-08T00:00:00.000Z",
-      updatedAt: "2026-09-08T00:00:00.000Z",
-    },
-  ]);
+    vi.mocked(getCatalogHabits).mockResolvedValue([
+      {
+        id: "habit-1",
+        key: "reading",
+        name: "Reading",
+        description: "Read for personal growth",
+        scheduleType: "DAILY",
+        scheduleConfig: {},
+        targetType: "DURATION",
+        targetValue: "30",
+        targetUnit: "minutes",
+        status: "AVAILABLE",
+        createdAt: "2026-09-08T00:00:00.000Z",
+        updatedAt: "2026-09-08T00:00:00.000Z",
+      },
+    ]);
 
-  render(<App />);
+    render(<App />);
 
-  expect(
-    await screen.findByRole("heading", { name: "Your habits" }),
-  ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Your habits" }),
+    ).toBeInTheDocument();
 
-  fireEvent.click(
-    screen.getByRole("button", { name: "Habit catalog" }),
-  );
+    fireEvent.click(screen.getByRole("button", { name: "Habit catalog" }));
 
-  expect(
-    await screen.findByRole("heading", { name: "Choose your habits" }),
-  ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Choose your habits" }),
+    ).toBeInTheDocument();
 
-  fireEvent.click(
-    screen.getByRole("button", { name: "My habits" }),
-  );
+    fireEvent.click(screen.getByRole("button", { name: "My habits" }));
 
-  expect(
-    await screen.findByRole("heading", { name: "Your habits" }),
-  ).toBeInTheDocument();
-});
+    expect(
+      await screen.findByRole("heading", { name: "Your habits" }),
+    ).toBeInTheDocument();
+  });
+
+  it("switches between my habits, habit catalog, and archived habits", async () => {
+    vi.mocked(api.getCurrentUser).mockResolvedValue({
+      user: {
+        id: "user-123",
+        email: "test@example.com",
+        createdAt: "2026-09-07T00:00:00.000Z",
+      },
+    });
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Your habits" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Archived" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Archived habits" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "My habits" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Your habits" }),
+    ).toBeInTheDocument();
+  });
 });
