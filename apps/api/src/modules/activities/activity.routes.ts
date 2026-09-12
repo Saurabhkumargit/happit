@@ -21,9 +21,12 @@ router.post("/", requireAuth, async (req, res, next) => {
       return;
     }
 
+    const idempotencyKey = req.get("Idempotency-Key") ?? undefined;
+
     const activity = await createActivity(
       req.user!.id,
       parsed.data,
+      idempotencyKey,
     );
 
     res.status(201).json({

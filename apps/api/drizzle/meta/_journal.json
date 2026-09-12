@@ -43,6 +43,13 @@
       "when": 1789217627768,
       "tag": "0005_large_colleen_wing",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789220072016,
+      "tag": "0006_white_satana",
+      "breakpoints": true
     }
   ]
 }

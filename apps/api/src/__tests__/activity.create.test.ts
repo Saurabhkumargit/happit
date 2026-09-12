@@ -356,4 +356,34 @@ describe("POST /api/v1/activities", () => {
       },
     });
   });
+
+  it("returns the original activity when the same idempotency key is retried", async () => {
+  const agent = await createAuthenticatedAgent();
+  const { userHabitId } = await adoptExercise(agent);
+
+  const idempotencyKey = crypto.randomUUID();
+
+  const payload = {
+    userHabitId,
+    activityDate: "2026-09-12",
+    source: "MANUAL",
+    durationSeconds: 1800,
+  };
+
+  const firstResponse = await agent
+    .post("/api/v1/activities")
+    .set("Idempotency-Key", idempotencyKey)
+    .send(payload)
+    .expect(201);
+
+  const secondResponse = await agent
+    .post("/api/v1/activities")
+    .set("Idempotency-Key", idempotencyKey)
+    .send(payload)
+    .expect(201);
+
+  expect(secondResponse.body.data.activity).toEqual(
+    firstResponse.body.data.activity,
+  );
+});
 });

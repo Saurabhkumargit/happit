@@ -208,6 +208,8 @@ export const activities = pgTable(
 
     unit: activityUnitEnum("unit"),
 
+    idempotencyKey: text("idempotency_key"),
+
     startedAt: timestamp("started_at", {
       withTimezone: true,
     }),
@@ -248,5 +250,9 @@ export const activities = pgTable(
       "activities_value_positive",
       sql`${table.value} IS NULL OR CAST(${table.value} AS NUMERIC) > 0`,
     ),
+
+    userHabitIdempotencyKeyUnique: uniqueIndex(
+      "activities_user_habit_idempotency_key_unique",
+    ).on(table.userHabitId, table.idempotencyKey),
   }),
 );

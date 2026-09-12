@@ -27,7 +27,25 @@ interface CreateActivityInput {
 export async function createActivity(
   userId: string,
   input: CreateActivityInput,
+  idempotencyKey?: string,
 ) {
+  if (idempotencyKey) {
+  const [existingActivity] = await db
+    .select()
+    .from(activities)
+    .where(
+      and(
+        eq(activities.userId, userId),
+        eq(activities.idempotencyKey, idempotencyKey),
+      ),
+    )
+    .limit(1);
+
+  if (existingActivity) {
+    return existingActivity;
+  }
+}
+
   const [userHabit] = await db
     .select({
       userHabitId: userHabits.id,
@@ -140,6 +158,7 @@ export async function createActivity(
       durationSeconds: input.durationSeconds,
       value: input.value?.toString(),
       unit: input.unit,
+      idempotencyKey,
       startedAt: input.startedAt
         ? new Date(input.startedAt)
         : null,
