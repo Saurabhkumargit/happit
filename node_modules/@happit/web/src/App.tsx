@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
 import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import {
   deleteAccount,
   getCurrentUser,
   logout,
@@ -14,17 +22,122 @@ import ArchivedHabitList from "./components/habits/ArchivedHabitList";
 import HabitDetail from "./components/habits/HabitDetail";
 
 type AuthMode = "login" | "register";
-type AppView = "habits" | "catalog" | "archived" | "detail";
 
-function App() {
+function HabitDetailRoute() {
+  const { habitId } = useParams<{ habitId: string }>();
+  const navigate = useNavigate();
+
+  if (!habitId) {
+    return <Navigate to="/app/habits" replace />;
+  }
+
+  return (
+    <HabitDetail
+      habitId={habitId}
+      onArchived={() => navigate("/app/habits/archived")}
+    />
+  );
+}
+
+function AuthenticatedApp({
+  user,
+  onLogout,
+  logoutError,
+  onDeleteAccount,
+  deleteError,
+  isDeleting,
+}: {
+  user: User;
+  onLogout: () => Promise<void>;
+  logoutError: string | null;
+  onDeleteAccount: () => Promise<void>;
+  deleteError: string | null;
+  isDeleting: boolean;
+}) {
+  const navigate = useNavigate();
+
+  return (
+    <main>
+      <h1>Happit</h1>
+      <p>Welcome, {user.email}</p>
+
+      <nav aria-label="Habit navigation">
+        <button type="button" onClick={() => navigate("/app/habits")}>
+          My habits
+        </button>
+
+        <button type="button" onClick={() => navigate("/app/habits/catalog")}>
+          Habit catalog
+        </button>
+
+        <button type="button" onClick={() => navigate("/app/habits/archived")}>
+          Archived
+        </button>
+      </nav>
+
+      <Routes>
+        <Route
+          path="/app/habits"
+          element={
+            <HabitList
+              onSelectHabit={(habitId) =>
+                navigate(`/app/habits/${habitId}`)
+              }
+            />
+          }
+        />
+
+        <Route
+          path="/app/habits/catalog"
+          element={<HabitCatalog />}
+        />
+
+        <Route
+          path="/app/habits/archived"
+          element={<ArchivedHabitList />}
+        />
+
+        <Route
+          path="/app/habits/:habitId"
+          element={<HabitDetailRoute />}
+        />
+
+        <Route
+          path="*"
+          element={<Navigate to="/app/habits" replace />}
+        />
+      </Routes>
+
+      {logoutError && <p role="alert">{logoutError}</p>}
+
+      <button type="button" onClick={onLogout}>
+        Log out
+      </button>
+
+      {deleteError && <p role="alert">{deleteError}</p>}
+
+      <button
+        type="button"
+        onClick={onDeleteAccount}
+        disabled={isDeleting}
+      >
+        {isDeleting ? "Deleting account..." : "Delete account"}
+      </button>
+
+      <button type="button" onClick={() => navigate("/app/habits")}>
+        Back to my habits
+      </button>
+    </main>
+  );
+}
+
+function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [appView, setAppView] = useState<AppView>("habits");
-  const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkAuth() {
@@ -116,77 +229,18 @@ function App() {
     );
   }
 
-  if (user) {
-    return (
-      <main>
-        <h1>Happit</h1>
-
-        <p>Welcome, {user.email}</p>
-
-        <nav aria-label="Habit navigation">
-          <button
-            type="button"
-            onClick={() => setAppView("habits")}
-            aria-current={appView === "habits" ? "page" : undefined}
-          >
-            My habits
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAppView("catalog")}
-            aria-current={appView === "catalog" ? "page" : undefined}
-          >
-            Habit catalog
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAppView("archived")}
-            aria-current={appView === "archived" ? "page" : undefined}
-          >
-            Archived
-          </button>
-        </nav>
-
-        {appView === "habits" && (
-          <HabitList
-            onSelectHabit={(habitId) => {
-              setSelectedHabitId(habitId);
-              setAppView("detail");
-            }}
-          />
-        )}
-        {appView === "detail" && selectedHabitId && (
-          <HabitDetail
-            habitId={selectedHabitId}
-            onArchived={() => setAppView("archived")}
-          />
-        )}
-        {appView === "catalog" && <HabitCatalog />}
-        {appView === "archived" && <ArchivedHabitList />}
-        {logoutError && <p role="alert">{logoutError}</p>}
-
-        <button type="button" onClick={handleLogout}>
-          Log out
-        </button>
-
-        {deleteError && <p role="alert">{deleteError}</p>}
-
-        <button
-          type="button"
-          onClick={handleDeleteAccount}
-          disabled={isDeleting}
-        >
-          {isDeleting ? "Deleting account..." : "Delete account"}
-        </button>
-
-        <button type="button" onClick={() => setAppView("habits")}>
-          Back to my habits
-        </button>
-      </main>
-    );
-  }
+ if (user) {
+  return (
+    <AuthenticatedApp
+      user={user}
+      onLogout={handleLogout}
+      logoutError={logoutError}
+      onDeleteAccount={handleDeleteAccount}
+      deleteError={deleteError}
+      isDeleting={isDeleting}
+    />
+  );
+}
 
   return (
     <main>
@@ -216,6 +270,14 @@ function App() {
         </>
       )}
     </main>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 

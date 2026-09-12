@@ -15,3 +15,5 @@ export const reorderHabitsSchema = z.object({
       },
     ),
 });
+
+export const habitIdParamSchema = z.string().uuid();

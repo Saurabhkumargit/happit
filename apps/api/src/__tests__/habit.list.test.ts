@@ -208,4 +208,18 @@ describe("GET /api/v1/habits", () => {
       .get("/api/v1/habits/00000000-0000-0000-0000-000000000000")
       .expect(401);
   });
+
+  it("returns 404 when habitId is not a valid UUID", async () => {
+    const agent = await createAuthenticatedAgent();
+    const response = await agent
+      .get("/api/v1/habits/1")
+      .expect(404);
+
+    expect(response.body).toEqual({
+      error: {
+        code: "HABIT_NOT_FOUND",
+        message: "Habit not found",
+      },
+    });
+  });
 });

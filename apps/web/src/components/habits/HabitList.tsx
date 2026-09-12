@@ -150,7 +150,7 @@ function HabitList({ onSelectHabit }: HabitListProps) {
               <h3>
                 <button
                   type="button"
-                  onClick={() => onSelectHabit?.(userHabit.id)}
+                  onClick={() => onSelectHabit?.(userHabit.habitId)}
                 >
                   {habit.name}
                 </button>

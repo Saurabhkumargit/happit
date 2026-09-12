@@ -13,10 +13,27 @@ import {
 import { requireAuth } from "../../middleware/auth.js";
 import {
   adoptHabitSchema,
+  habitIdParamSchema,
   reorderHabitsSchema,
 } from "./habit.validation.js";
 
 const router = Router();
+
+router.param("habitId", (req, res, next, habitId) => {
+  const parsed = habitIdParamSchema.safeParse(habitId);
+
+  if (!parsed.success) {
+    res.status(404).json({
+      error: {
+        code: "HABIT_NOT_FOUND",
+        message: "Habit not found",
+      },
+    });
+    return;
+  }
+
+  next();
+});
 
 router.get("/catalog", async (_req, res, next) => {
   try {
