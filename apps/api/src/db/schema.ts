@@ -6,6 +6,7 @@ import {
   uuid,
   text,
   timestamp,
+  date,
   integer,
   numeric,
   jsonb,
@@ -34,6 +35,19 @@ export const habitStatusEnum = pgEnum("habit_status", [
 export const userHabitStatusEnum = pgEnum("user_habit_status", [
   "ACTIVE",
   "ARCHIVED",
+]);
+
+export const activitySourceEnum = pgEnum("activity_source", [
+  "TIMER",
+  "MANUAL",
+]);
+
+export const activityUnitEnum = pgEnum("activity_unit", [
+  "MINUTES",
+  "SECONDS",
+  "REPETITIONS",
+  "PAGES",
+  "LITERS",
 ]);
 
 export const users = pgTable(
@@ -163,6 +177,76 @@ export const userHabits = pgTable(
     sortOrderNonNegativeCheck: check(
       "user_habits_sort_order_non_negative",
       sql`${table.sortOrder} >= 0`,
+    ),
+  }),
+);
+
+export const activities = pgTable(
+  "activities",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, {
+        onDelete: "cascade",
+      }),
+
+    userHabitId: uuid("user_habit_id")
+      .notNull()
+      .references(() => userHabits.id, {
+        onDelete: "restrict",
+      }),
+
+    source: activitySourceEnum("source").notNull(),
+
+    activityDate: date("activity_date").notNull(),
+
+    durationSeconds: integer("duration_seconds"),
+
+    value: numeric("value"),
+
+    unit: activityUnitEnum("unit"),
+
+    startedAt: timestamp("started_at", {
+      withTimezone: true,
+    }),
+
+    endedAt: timestamp("ended_at", {
+      withTimezone: true,
+    }),
+
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+    })
+      .defaultNow()
+      .notNull(),
+
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    userDateIndex: index("activities_user_date_idx").on(
+      table.userId,
+      table.activityDate,
+    ),
+
+    userHabitDateIndex: index("activities_user_habit_date_idx").on(
+      table.userHabitId,
+      table.activityDate,
+    ),
+
+    durationPositiveCheck: check(
+      "activities_duration_positive",
+      sql`${table.durationSeconds} IS NULL OR ${table.durationSeconds} > 0`,
+    ),
+
+    valuePositiveCheck: check(
+      "activities_value_positive",
+      sql`${table.value} IS NULL OR CAST(${table.value} AS NUMERIC) > 0`,
     ),
   }),
 );
