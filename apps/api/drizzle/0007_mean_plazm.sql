@@ -1,0 +1,2 @@
+DROP INDEX "activities_user_habit_idempotency_key_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "activities_user_idempotency_key_unique" ON "activities" USING btree ("user_id","idempotency_key");

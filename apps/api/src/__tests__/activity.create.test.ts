@@ -386,4 +386,88 @@ describe("POST /api/v1/activities", () => {
     firstResponse.body.data.activity,
   );
 });
+
+it("rejects a reused idempotency key with a different payload", async () => {
+  const agent = await createAuthenticatedAgent();
+  const { userHabitId } = await adoptExercise(agent);
+
+  const idempotencyKey = crypto.randomUUID();
+
+  await agent
+    .post("/api/v1/activities")
+    .set("Idempotency-Key", idempotencyKey)
+    .send({
+      userHabitId,
+      activityDate: "2026-09-12",
+      source: "MANUAL",
+      durationSeconds: 1800,
+    })
+    .expect(201);
+
+  const response = await agent
+    .post("/api/v1/activities")
+    .set("Idempotency-Key", idempotencyKey)
+    .send({
+      userHabitId,
+      activityDate: "2026-09-12",
+      source: "MANUAL",
+      durationSeconds: 3600,
+    })
+    .expect(409);
+
+  expect(response.body).toEqual({
+    error: {
+      code: "IDEMPOTENCY_KEY_REUSED",
+      message: "Idempotency key has already been used for a different request",
+    },
+  });
+});
+
+it("allows the same idempotency key for different users", async () => {
+  const firstAgent = await createAuthenticatedAgent();
+  const secondAgent = await createAuthenticatedAgent();
+
+  const firstHabit = await adoptExercise(firstAgent);
+  const secondHabit = await adoptExercise(secondAgent);
+
+  const idempotencyKey = crypto.randomUUID();
+
+  const firstResponse = await firstAgent
+    .post("/api/v1/activities")
+    .set("Idempotency-Key", idempotencyKey)
+    .send({
+      userHabitId: firstHabit.userHabitId,
+      activityDate: "2026-09-12",
+      source: "MANUAL",
+      durationSeconds: 1800,
+    })
+    .expect(201);
+
+  const secondResponse = await secondAgent
+    .post("/api/v1/activities")
+    .set("Idempotency-Key", idempotencyKey)
+    .send({
+      userHabitId: secondHabit.userHabitId,
+      activityDate: "2026-09-12",
+      source: "MANUAL",
+      durationSeconds: 1800,
+    })
+    .expect(201);
+
+  expect(firstResponse.body.data.activity.id).not.toBe(
+    secondResponse.body.data.activity.id,
+  );
+
+  expect(firstResponse.body.data.activity.userId).not.toBe(
+    secondResponse.body.data.activity.userId,
+  );
+
+  expect(firstResponse.body.data.activity.idempotencyKey).toBe(
+    idempotencyKey,
+  );
+
+  expect(secondResponse.body.data.activity.idempotencyKey).toBe(
+    idempotencyKey,
+  );
+});
 });

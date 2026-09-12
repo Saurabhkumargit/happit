@@ -50,6 +50,13 @@
       "when": 1789220072016,
       "tag": "0006_white_satana",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789220815011,
+      "tag": "0007_mean_plazm",
+      "breakpoints": true
     }
   ]
 }

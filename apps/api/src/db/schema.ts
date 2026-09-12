@@ -163,9 +163,10 @@ export const userHabits = pgTable(
     }),
   },
   (table) => ({
-    userHabitUniqueIndex: uniqueIndex(
-      "user_habits_user_habit_unique",
-    ).on(table.userId, table.habitId),
+    userHabitUniqueIndex: uniqueIndex("user_habits_user_habit_unique").on(
+      table.userId,
+      table.habitId,
+    ),
     userStatusIndex: index("user_habits_user_status_idx").on(
       table.userId,
       table.status,
@@ -251,8 +252,8 @@ export const activities = pgTable(
       sql`${table.value} IS NULL OR CAST(${table.value} AS NUMERIC) > 0`,
     ),
 
-    userHabitIdempotencyKeyUnique: uniqueIndex(
-      "activities_user_habit_idempotency_key_unique",
-    ).on(table.userHabitId, table.idempotencyKey),
+    userIdempotencyKeyUnique: uniqueIndex(
+      "activities_user_idempotency_key_unique",
+    ).on(table.userId, table.idempotencyKey),
   }),
 );
