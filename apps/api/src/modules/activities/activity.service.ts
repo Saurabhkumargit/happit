@@ -242,3 +242,63 @@ export async function listActivities(
     desc(activities.createdAt),
   );
 }
+
+export async function getActivityById(
+  userId: string,
+  activityId: string,
+) {
+  const [result] = await db
+    .select({
+      id: activities.id,
+      userId: activities.userId,
+      userHabitId: activities.userHabitId,
+      source: activities.source,
+      activityDate: activities.activityDate,
+      durationSeconds: activities.durationSeconds,
+      value: activities.value,
+      unit: activities.unit,
+      idempotencyKey: activities.idempotencyKey,
+      startedAt: activities.startedAt,
+      endedAt: activities.endedAt,
+      createdAt: activities.createdAt,
+      updatedAt: activities.updatedAt,
+      habit: {
+        id: habits.id,
+        key: habits.key,
+        name: habits.name,
+        description: habits.description,
+        scheduleType: habits.scheduleType,
+        scheduleConfig: habits.scheduleConfig,
+        targetType: habits.targetType,
+        targetValue: habits.targetValue,
+        targetUnit: habits.targetUnit,
+        status: habits.status,
+      },
+    })
+    .from(activities)
+    .innerJoin(
+      userHabits,
+      eq(activities.userHabitId, userHabits.id),
+    )
+    .innerJoin(
+      habits,
+      eq(userHabits.habitId, habits.id),
+    )
+    .where(
+      and(
+        eq(activities.id, activityId),
+        eq(activities.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  if (!result) {
+    throw new AppError(
+      404,
+      "ACTIVITY_NOT_FOUND",
+      "Activity not found",
+    );
+  }
+
+  return result;
+}
