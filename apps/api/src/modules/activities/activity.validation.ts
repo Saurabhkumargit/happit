@@ -20,3 +20,19 @@ export const createActivitySchema = z.object({
 });
 
 export const activityIdParamSchema = z.string().uuid();
+
+export const activityHistoryQuerySchema = z
+  .object({
+    userHabitId: z.uuid().optional(),
+    from: z.iso.date().optional(),
+    to: z.iso.date().optional(),
+  })
+  .refine(
+    (query) =>
+      !query.from ||
+      !query.to ||
+      query.from <= query.to,
+    {
+      message: "The start date must not be after the end date",
+    },
+  );

@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 
 import { db } from "../../db/index.js";
 import { activities, habits, userHabits } from "../../db/schema.js";
@@ -164,4 +164,81 @@ export async function createActivity(
     .returning();
 
   return activity;
+}
+
+
+interface ActivityHistoryFilters {
+  userHabitId?: string;
+  from?: string;
+  to?: string;
+}
+
+export async function listActivities(
+  userId: string,
+  filters: ActivityHistoryFilters,
+) {
+  const conditions = [
+    eq(activities.userId, userId),
+  ];
+
+  if (filters.userHabitId) {
+    conditions.push(
+      eq(activities.userHabitId, filters.userHabitId),
+    );
+  }
+
+  if (filters.from) {
+    conditions.push(
+      gte(activities.activityDate, filters.from),
+    );
+  }
+
+  if (filters.to) {
+    conditions.push(
+      lte(activities.activityDate, filters.to),
+    );
+  }
+
+  return db
+  .select({
+    id: activities.id,
+    userId: activities.userId,
+    userHabitId: activities.userHabitId,
+    source: activities.source,
+    activityDate: activities.activityDate,
+    durationSeconds: activities.durationSeconds,
+    value: activities.value,
+    unit: activities.unit,
+    idempotencyKey: activities.idempotencyKey,
+    startedAt: activities.startedAt,
+    endedAt: activities.endedAt,
+    createdAt: activities.createdAt,
+    updatedAt: activities.updatedAt,
+    habit: {
+      id: habits.id,
+      key: habits.key,
+      name: habits.name,
+      description: habits.description,
+      scheduleType: habits.scheduleType,
+      scheduleConfig: habits.scheduleConfig,
+      targetType: habits.targetType,
+      targetValue: habits.targetValue,
+      targetUnit: habits.targetUnit,
+      status: habits.status,
+    },
+  })
+  .from(activities)
+  .innerJoin(
+    userHabits,
+    eq(activities.userHabitId, userHabits.id),
+  )
+  .innerJoin(
+    habits,
+    eq(userHabits.habitId, habits.id),
+  )
+  .where(and(...conditions))
+  .orderBy(
+    desc(activities.activityDate),
+    desc(activities.createdAt),
+  );
 }

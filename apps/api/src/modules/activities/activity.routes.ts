@@ -1,10 +1,49 @@
 import { Router } from "express";
 
 import { requireAuth } from "../../middleware/auth.js";
-import { createActivity } from "./activity.service.js";
-import { createActivitySchema } from "./activity.validation.js";
+import {
+  createActivitySchema,
+  activityHistoryQuerySchema,
+} from "./activity.validation.js";
+
+import {
+  createActivity,
+  listActivities,
+} from "./activity.service.js";
 
 const router = Router();
+
+router.get("/", requireAuth, async (req, res, next) => {
+  try {
+    const parsed = activityHistoryQuerySchema.safeParse(
+      req.query,
+    );
+
+    if (!parsed.success) {
+      res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid request data",
+        },
+      });
+
+      return;
+    }
+
+    const activities = await listActivities(
+      req.user!.id,
+      parsed.data,
+    );
+
+    res.status(200).json({
+      data: {
+        activities,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post("/", requireAuth, async (req, res, next) => {
   try {
