@@ -20,6 +20,7 @@ import HabitList from "./components/habits/HabitList";
 import HabitCatalog from "./components/habits/HabitCatalog";
 import ArchivedHabitList from "./components/habits/ArchivedHabitList";
 import HabitDetail from "./components/habits/HabitDetail";
+import ActivityHistory from "./components/activities/ActivityHistory";
 
 type AuthMode = "login" | "register";
 
@@ -73,6 +74,13 @@ function AuthenticatedApp({
         <button type="button" onClick={() => navigate("/app/habits/archived")}>
           Archived
         </button>
+
+        <button
+          type="button"
+          onClick={() => navigate("/app/activities")}
+        >
+          Activity history
+        </button>
       </nav>
 
       <Routes>
@@ -95,6 +103,11 @@ function AuthenticatedApp({
         <Route
           path="/app/habits/archived"
           element={<ArchivedHabitList />}
+        />
+
+        <Route
+          path="/app/activities"
+          element={<ActivityHistory />}
         />
 
         <Route
