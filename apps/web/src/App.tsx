@@ -22,6 +22,7 @@ import ArchivedHabitList from "./components/habits/ArchivedHabitList";
 import HabitDetail from "./components/habits/HabitDetail";
 import ActivityHistory from "./components/activities/ActivityHistory";
 import ManualActivityForm from "./components/activities/ManualActivityForm";
+import TimerActivityForm from "./components/activities/TimerActivityForm";
 
 type AuthMode = "login" | "register";
 
@@ -76,6 +77,10 @@ function AuthenticatedApp({
           Archived
         </button>
 
+        <button type="button" onClick={() => navigate("/app/activities/timer")}>
+          Start timer
+        </button>
+
         <button type="button" onClick={() => navigate("/app/activities")}>
           Activity history
         </button>
@@ -100,6 +105,15 @@ function AuthenticatedApp({
         <Route path="/app/habits/archived" element={<ArchivedHabitList />} />
 
         <Route path="/app/activities" element={<ActivityHistory />} />
+
+        <Route
+          path="/app/activities/timer"
+          element={
+            <TimerActivityForm
+              onSaved={() => navigate("/app/activities")}
+            />
+          }
+        />
 
         <Route
           path="/app/activities/new"
