@@ -119,6 +119,8 @@ async function handleSave() {
   }
 }
   function handleEdit() {
+    setIdempotencyKey(null);
+    setSaveError(null);
     setIsReviewing(false);
   }
 

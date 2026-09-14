@@ -23,6 +23,7 @@ import HabitDetail from "./components/habits/HabitDetail";
 import ActivityHistory from "./components/activities/ActivityHistory";
 import ManualActivityForm from "./components/activities/ManualActivityForm";
 import TimerActivityForm from "./components/activities/TimerActivityForm";
+import ActivityDetail from "./components/activities/ActivityDetail";
 
 type AuthMode = "login" | "register";
 
@@ -38,6 +39,22 @@ function HabitDetailRoute() {
     <HabitDetail
       habitId={habitId}
       onArchived={() => navigate("/app/habits/archived")}
+    />
+  );
+}
+
+function ActivityDetailRoute() {
+  const { activityId } = useParams<{ activityId: string }>();
+  const navigate = useNavigate();
+
+  if (!activityId) {
+    return <Navigate to="/app/activities" replace />;
+  }
+
+  return (
+    <ActivityDetail
+      activityId={activityId}
+      onDeleted={() => navigate("/app/activities")}
     />
   );
 }
@@ -104,7 +121,16 @@ function AuthenticatedApp({
 
         <Route path="/app/habits/archived" element={<ArchivedHabitList />} />
 
-        <Route path="/app/activities" element={<ActivityHistory />} />
+        <Route
+          path="/app/activities"
+          element={
+            <ActivityHistory
+              onSelectActivity={(activityId) =>
+                navigate(`/app/activities/${activityId}`)
+              }
+            />
+          }
+        />
 
         <Route
           path="/app/activities/timer"
@@ -120,6 +146,11 @@ function AuthenticatedApp({
           element={
             <ManualActivityForm onSaved={() => navigate("/app/activities")} />
           }
+        />
+
+        <Route
+          path="/app/activities/:activityId"
+          element={<ActivityDetailRoute />}
         />
 
         <Route path="/app/habits/:habitId" element={<HabitDetailRoute />} />

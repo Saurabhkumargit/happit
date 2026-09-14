@@ -272,7 +272,14 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
           This activity will be recorded as a timer activity.
         </p>
 
-        <button type="button" onClick={() => setTimerState("PAUSED")}>
+        <button
+          type="button"
+          onClick={() => {
+            setIdempotencyKey(null);
+            setSaveError(null);
+            setTimerState("PAUSED");
+          }}
+        >
           Edit
         </button>
 
