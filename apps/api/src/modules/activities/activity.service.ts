@@ -15,6 +15,16 @@ interface CreateActivityInput {
   endedAt?: string;
 }
 
+interface UpdateActivityInput {
+  activityDate?: string;
+  source?: "TIMER" | "MANUAL";
+  durationSeconds?: number;
+  value?: number;
+  unit?: "MINUTES" | "SECONDS" | "REPETITIONS" | "PAGES" | "LITERS";
+  startedAt?: string;
+  endedAt?: string;
+}
+
 export async function createActivity(
   userId: string,
   input: CreateActivityInput,
@@ -301,4 +311,185 @@ export async function getActivityById(
   }
 
   return result;
+}
+
+export async function updateActivity(
+  userId: string,
+  activityId: string,
+  input: UpdateActivityInput,
+) {
+  const [existingActivity] = await db
+    .select({
+      activity: activities,
+      userHabit: {
+        id: userHabits.id,
+        status: userHabits.status,
+      },
+      habit: habits,
+    })
+    .from(activities)
+    .innerJoin(
+      userHabits,
+      eq(activities.userHabitId, userHabits.id),
+    )
+    .innerJoin(
+      habits,
+      eq(userHabits.habitId, habits.id),
+    )
+    .where(
+      and(
+        eq(activities.id, activityId),
+        eq(activities.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  if (!existingActivity) {
+    throw new AppError(
+      404,
+      "ACTIVITY_NOT_FOUND",
+      "Activity not found",
+    );
+  }
+
+  if (existingActivity.userHabit.status !== "ACTIVE") {
+    throw new AppError(
+      400,
+      "HABIT_NOT_ACTIVE",
+      "Cannot edit activity for an archived habit",
+    );
+  }
+
+  const current = existingActivity.activity;
+
+  const activityDate =
+    input.activityDate ?? current.activityDate;
+
+  const source =
+    input.source ?? current.source;
+
+  const durationSeconds =
+    input.durationSeconds ?? current.durationSeconds;
+
+  const value =
+    input.value !== undefined
+      ? input.value.toString()
+      : current.value;
+
+  const unit =
+    input.unit ?? current.unit;
+
+  const startedAt =
+    input.startedAt !== undefined
+      ? new Date(input.startedAt)
+      : current.startedAt;
+
+  const endedAt =
+    input.endedAt !== undefined
+      ? new Date(input.endedAt)
+      : current.endedAt;
+
+  const { habit } = existingActivity;
+
+  if (habit.targetType === "DURATION") {
+    if (durationSeconds === null || durationSeconds === undefined) {
+      throw new AppError(
+        400,
+        "INVALID_ACTIVITY",
+        "Duration is required for this habit",
+      );
+    }
+
+    if (value !== null || unit !== null) {
+      throw new AppError(
+        400,
+        "INVALID_ACTIVITY",
+        "Duration activities must use durationSeconds",
+      );
+    }
+  } else {
+    if (value === null || unit === null) {
+      throw new AppError(
+        400,
+        "INVALID_ACTIVITY",
+        "Value and unit are required for this habit",
+      );
+    }
+
+    if (durationSeconds !== null) {
+      throw new AppError(
+        400,
+        "INVALID_ACTIVITY",
+        "Non-duration activities cannot use durationSeconds",
+      );
+    }
+
+    const expectedUnit = habit.targetUnit.trim().toLowerCase();
+    const submittedUnit = unit.trim().toLowerCase();
+
+    if (expectedUnit !== submittedUnit) {
+      throw new AppError(
+        400,
+        "INVALID_ACTIVITY",
+        "Activity unit does not match the habit target unit",
+      );
+    }
+  }
+
+  if (startedAt && endedAt && endedAt <= startedAt) {
+    throw new AppError(
+      400,
+      "INVALID_ACTIVITY",
+      "Activity end time must be after start time",
+    );
+  }
+
+  const [updatedActivity] = await db
+    .update(activities)
+    .set({
+      activityDate,
+      source,
+      durationSeconds,
+      value,
+      unit,
+      startedAt,
+      endedAt,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(activities.id, activityId),
+        eq(activities.userId, userId),
+      ),
+    )
+    .returning();
+
+  return updatedActivity;
+}
+
+export async function deleteActivity(
+  userId: string,
+  activityId: string,
+) {
+  const [deletedActivity] = await db
+    .delete(activities)
+    .where(
+      and(
+        eq(activities.id, activityId),
+        eq(activities.userId, userId),
+      ),
+    )
+    .returning({
+      id: activities.id,
+    });
+
+  if (!deletedActivity) {
+    throw new AppError(
+      404,
+      "ACTIVITY_NOT_FOUND",
+      "Activity not found",
+    );
+  }
+
+  return deletedActivity;
 }

@@ -19,6 +19,31 @@ export const createActivitySchema = z.object({
   endedAt: z.iso.datetime().optional(),
 });
 
+export const updateActivitySchema = z
+  .object({
+    activityDate: z.iso.date().optional(),
+    source: z.enum(["TIMER", "MANUAL"]).optional(),
+    durationSeconds: z.number().int().positive().optional(),
+    value: z.number().positive().optional(),
+    unit: z
+      .enum([
+        "MINUTES",
+        "SECONDS",
+        "REPETITIONS",
+        "PAGES",
+        "LITERS",
+      ])
+      .optional(),
+    startedAt: z.iso.datetime().optional(),
+    endedAt: z.iso.datetime().optional(),
+  })
+  .refine(
+    (data) => Object.keys(data).length > 0,
+    {
+      message: "At least one field must be provided",
+    },
+  );
+
 export const activityIdParamSchema = z.string().uuid();
 
 export const activityHistoryQuerySchema = z
