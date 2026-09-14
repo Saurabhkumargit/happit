@@ -69,7 +69,10 @@ async function adoptExercise(
     })
     .expect(201);
 
-  return response.body.habit.id as string;
+  return {
+    habitId: exerciseId,
+    userHabitId: response.body.habit.id as string,
+  };
 }
 
 async function createActivity(
@@ -110,7 +113,7 @@ describe("PATCH /api/v1/activities/:activityId", () => {
 
   it("updates an activity's duration", async () => {
     const agent = await createAuthenticatedAgent();
-    const userHabitId = await adoptExercise(agent);
+    const { userHabitId } = await adoptExercise(agent);
     const activity = await createActivity(agent, userHabitId);
 
     const response = await agent
@@ -131,7 +134,7 @@ describe("PATCH /api/v1/activities/:activityId", () => {
 
   it("updates an activity's historical date", async () => {
     const agent = await createAuthenticatedAgent();
-    const userHabitId = await adoptExercise(agent);
+    const { userHabitId } = await adoptExercise(agent);
     const activity = await createActivity(agent, userHabitId);
 
     const response = await agent
@@ -150,7 +153,7 @@ describe("PATCH /api/v1/activities/:activityId", () => {
 
   it("supports partial updates", async () => {
     const agent = await createAuthenticatedAgent();
-    const userHabitId = await adoptExercise(agent);
+    const { userHabitId } = await adoptExercise(agent);
     const activity = await createActivity(agent, userHabitId);
 
     const response = await agent
@@ -171,7 +174,7 @@ describe("PATCH /api/v1/activities/:activityId", () => {
 
   it("rejects an empty update", async () => {
     const agent = await createAuthenticatedAgent();
-    const userHabitId = await adoptExercise(agent);
+    const { userHabitId } = await adoptExercise(agent);
     const activity = await createActivity(agent, userHabitId);
 
     const response = await agent
@@ -189,7 +192,7 @@ describe("PATCH /api/v1/activities/:activityId", () => {
 
   it("rejects invalid update data", async () => {
     const agent = await createAuthenticatedAgent();
-    const userHabitId = await adoptExercise(agent);
+    const { userHabitId } = await adoptExercise(agent);
     const activity = await createActivity(agent, userHabitId);
 
     const response = await agent
@@ -249,7 +252,7 @@ describe("PATCH /api/v1/activities/:activityId", () => {
     const firstAgent = await createAuthenticatedAgent();
     const secondAgent = await createAuthenticatedAgent();
 
-    const firstUserHabitId = await adoptExercise(firstAgent);
+    const { userHabitId: firstUserHabitId } = await adoptExercise(firstAgent);
     const activity = await createActivity(
       firstAgent,
       firstUserHabitId,
@@ -272,7 +275,7 @@ describe("PATCH /api/v1/activities/:activityId", () => {
 
   it("preserves the activity's adopted habit", async () => {
     const agent = await createAuthenticatedAgent();
-    const userHabitId = await adoptExercise(agent);
+    const { userHabitId } = await adoptExercise(agent);
     const activity = await createActivity(agent, userHabitId);
 
     const response = await agent
@@ -290,7 +293,7 @@ describe("PATCH /api/v1/activities/:activityId", () => {
 
   it("rejects an invalid resulting timestamp range", async () => {
     const agent = await createAuthenticatedAgent();
-    const userHabitId = await adoptExercise(agent);
+    const { userHabitId } = await adoptExercise(agent);
 
     const response = await agent
       .post("/api/v1/activities")
@@ -323,7 +326,7 @@ describe("PATCH /api/v1/activities/:activityId", () => {
 
   it("does not allow a duration activity to be changed to value/unit fields", async () => {
     const agent = await createAuthenticatedAgent();
-    const userHabitId = await adoptExercise(agent);
+    const { userHabitId } = await adoptExercise(agent);
     const activity = await createActivity(agent, userHabitId);
 
     const response = await agent
@@ -339,6 +342,33 @@ describe("PATCH /api/v1/activities/:activityId", () => {
         code: "INVALID_ACTIVITY",
         message: "Duration activities must use durationSeconds",
       },
+    });
+  });
+
+  it("allows editing an activity after its habit is archived", async () => {
+    const agent = await createAuthenticatedAgent();
+    const { habitId, userHabitId } = await adoptExercise(agent);
+
+    const activity = await createActivity(
+      agent,
+      userHabitId,
+    );
+
+    await agent
+      .post(`/api/v1/habits/${habitId}/archive`)
+      .expect(200);
+
+    const response = await agent
+      .patch(`/api/v1/activities/${activity.id}`)
+      .send({
+        durationSeconds: 2400,
+      })
+      .expect(200);
+
+    expect(response.body.data.activity).toMatchObject({
+      id: activity.id,
+      userHabitId,
+      durationSeconds: 2400,
     });
   });
 });

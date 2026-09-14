@@ -1,4 +1,5 @@
 import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { DatabaseError } from "pg";
 
 import { db } from "../../db/index.js";
 import { activities, habits, userHabits } from "../../db/schema.js";
@@ -157,25 +158,81 @@ export async function createActivity(
     );
   }
 
-  const [activity] = await db
-    .insert(activities)
-    .values({
-      userId,
-      userHabitId: input.userHabitId,
-      source: input.source,
-      activityDate: input.activityDate,
-      durationSeconds: input.durationSeconds,
-      value: input.value?.toString(),
-      unit: input.unit,
-      idempotencyKey,
-      startedAt: input.startedAt ? new Date(input.startedAt) : null,
-      endedAt: input.endedAt ? new Date(input.endedAt) : null,
-    })
-    .returning();
+  try {
+    const [activity] = await db
+      .insert(activities)
+      .values({
+        userId,
+        userHabitId: input.userHabitId,
+        source: input.source,
+        activityDate: input.activityDate,
+        durationSeconds: input.durationSeconds,
+        value: input.value?.toString(),
+        unit: input.unit,
+        idempotencyKey,
+        startedAt: input.startedAt
+          ? new Date(input.startedAt)
+          : null,
+        endedAt: input.endedAt
+          ? new Date(input.endedAt)
+          : null,
+      })
+      .returning();
 
-  return activity;
+    return activity;
+  } catch (error) {
+    if (
+      idempotencyKey &&
+      error instanceof DatabaseError &&
+      error.code === "23505"
+    ) {
+      const [existingActivity] = await db
+        .select()
+        .from(activities)
+        .where(
+          and(
+            eq(activities.userId, userId),
+            eq(activities.idempotencyKey, idempotencyKey),
+          ),
+        )
+        .limit(1);
+
+      if (existingActivity) {
+        const existingStartedAt =
+          existingActivity.startedAt?.toISOString() ?? undefined;
+
+        const existingEndedAt =
+          existingActivity.endedAt?.toISOString() ?? undefined;
+
+        const sameRequest =
+          existingActivity.userHabitId === input.userHabitId &&
+          existingActivity.activityDate === input.activityDate &&
+          existingActivity.source === input.source &&
+          existingActivity.durationSeconds ===
+            (input.durationSeconds ?? null) &&
+          existingActivity.value ===
+            (input.value !== undefined
+              ? input.value.toString()
+              : null) &&
+          existingActivity.unit === (input.unit ?? null) &&
+          existingStartedAt === input.startedAt &&
+          existingEndedAt === input.endedAt;
+
+        if (!sameRequest) {
+          throw new AppError(
+            409,
+            "IDEMPOTENCY_KEY_REUSED",
+            "Idempotency key has already been used for a different request",
+          );
+        }
+
+        return existingActivity;
+      }
+    }
+
+    throw error;
+  }
 }
-
 
 interface ActivityHistoryFilters {
   userHabitId?: string;
@@ -187,76 +244,56 @@ export async function listActivities(
   userId: string,
   filters: ActivityHistoryFilters,
 ) {
-  const conditions = [
-    eq(activities.userId, userId),
-  ];
+  const conditions = [eq(activities.userId, userId)];
 
   if (filters.userHabitId) {
-    conditions.push(
-      eq(activities.userHabitId, filters.userHabitId),
-    );
+    conditions.push(eq(activities.userHabitId, filters.userHabitId));
   }
 
   if (filters.from) {
-    conditions.push(
-      gte(activities.activityDate, filters.from),
-    );
+    conditions.push(gte(activities.activityDate, filters.from));
   }
 
   if (filters.to) {
-    conditions.push(
-      lte(activities.activityDate, filters.to),
-    );
+    conditions.push(lte(activities.activityDate, filters.to));
   }
 
   return db
-  .select({
-    id: activities.id,
-    userId: activities.userId,
-    userHabitId: activities.userHabitId,
-    source: activities.source,
-    activityDate: activities.activityDate,
-    durationSeconds: activities.durationSeconds,
-    value: activities.value,
-    unit: activities.unit,
-    idempotencyKey: activities.idempotencyKey,
-    startedAt: activities.startedAt,
-    endedAt: activities.endedAt,
-    createdAt: activities.createdAt,
-    updatedAt: activities.updatedAt,
-    habit: {
-      id: habits.id,
-      key: habits.key,
-      name: habits.name,
-      description: habits.description,
-      scheduleType: habits.scheduleType,
-      scheduleConfig: habits.scheduleConfig,
-      targetType: habits.targetType,
-      targetValue: habits.targetValue,
-      targetUnit: habits.targetUnit,
-      status: habits.status,
-    },
-  })
-  .from(activities)
-  .innerJoin(
-    userHabits,
-    eq(activities.userHabitId, userHabits.id),
-  )
-  .innerJoin(
-    habits,
-    eq(userHabits.habitId, habits.id),
-  )
-  .where(and(...conditions))
-  .orderBy(
-    desc(activities.activityDate),
-    desc(activities.createdAt),
-  );
+    .select({
+      id: activities.id,
+      userId: activities.userId,
+      userHabitId: activities.userHabitId,
+      source: activities.source,
+      activityDate: activities.activityDate,
+      durationSeconds: activities.durationSeconds,
+      value: activities.value,
+      unit: activities.unit,
+      idempotencyKey: activities.idempotencyKey,
+      startedAt: activities.startedAt,
+      endedAt: activities.endedAt,
+      createdAt: activities.createdAt,
+      updatedAt: activities.updatedAt,
+      habit: {
+        id: habits.id,
+        key: habits.key,
+        name: habits.name,
+        description: habits.description,
+        scheduleType: habits.scheduleType,
+        scheduleConfig: habits.scheduleConfig,
+        targetType: habits.targetType,
+        targetValue: habits.targetValue,
+        targetUnit: habits.targetUnit,
+        status: habits.status,
+      },
+    })
+    .from(activities)
+    .innerJoin(userHabits, eq(activities.userHabitId, userHabits.id))
+    .innerJoin(habits, eq(userHabits.habitId, habits.id))
+    .where(and(...conditions))
+    .orderBy(desc(activities.activityDate), desc(activities.createdAt));
 }
 
-export async function getActivityById(
-  userId: string,
-  activityId: string,
-) {
+export async function getActivityById(userId: string, activityId: string) {
   const [result] = await db
     .select({
       id: activities.id,
@@ -286,28 +323,13 @@ export async function getActivityById(
       },
     })
     .from(activities)
-    .innerJoin(
-      userHabits,
-      eq(activities.userHabitId, userHabits.id),
-    )
-    .innerJoin(
-      habits,
-      eq(userHabits.habitId, habits.id),
-    )
-    .where(
-      and(
-        eq(activities.id, activityId),
-        eq(activities.userId, userId),
-      ),
-    )
+    .innerJoin(userHabits, eq(activities.userHabitId, userHabits.id))
+    .innerJoin(habits, eq(userHabits.habitId, habits.id))
+    .where(and(eq(activities.id, activityId), eq(activities.userId, userId)))
     .limit(1);
 
   if (!result) {
-    throw new AppError(
-      404,
-      "ACTIVITY_NOT_FOUND",
-      "Activity not found",
-    );
+    throw new AppError(404, "ACTIVITY_NOT_FOUND", "Activity not found");
   }
 
   return result;
@@ -328,56 +350,27 @@ export async function updateActivity(
       habit: habits,
     })
     .from(activities)
-    .innerJoin(
-      userHabits,
-      eq(activities.userHabitId, userHabits.id),
-    )
-    .innerJoin(
-      habits,
-      eq(userHabits.habitId, habits.id),
-    )
-    .where(
-      and(
-        eq(activities.id, activityId),
-        eq(activities.userId, userId),
-      ),
-    )
+    .innerJoin(userHabits, eq(activities.userHabitId, userHabits.id))
+    .innerJoin(habits, eq(userHabits.habitId, habits.id))
+    .where(and(eq(activities.id, activityId), eq(activities.userId, userId)))
     .limit(1);
 
   if (!existingActivity) {
-    throw new AppError(
-      404,
-      "ACTIVITY_NOT_FOUND",
-      "Activity not found",
-    );
-  }
-
-  if (existingActivity.userHabit.status !== "ACTIVE") {
-    throw new AppError(
-      400,
-      "HABIT_NOT_ACTIVE",
-      "Cannot edit activity for an archived habit",
-    );
+    throw new AppError(404, "ACTIVITY_NOT_FOUND", "Activity not found");
   }
 
   const current = existingActivity.activity;
 
-  const activityDate =
-    input.activityDate ?? current.activityDate;
+  const activityDate = input.activityDate ?? current.activityDate;
 
-  const source =
-    input.source ?? current.source;
+  const source = input.source ?? current.source;
 
-  const durationSeconds =
-    input.durationSeconds ?? current.durationSeconds;
+  const durationSeconds = input.durationSeconds ?? current.durationSeconds;
 
   const value =
-    input.value !== undefined
-      ? input.value.toString()
-      : current.value;
+    input.value !== undefined ? input.value.toString() : current.value;
 
-  const unit =
-    input.unit ?? current.unit;
+  const unit = input.unit ?? current.unit;
 
   const startedAt =
     input.startedAt !== undefined
@@ -385,9 +378,7 @@ export async function updateActivity(
       : current.startedAt;
 
   const endedAt =
-    input.endedAt !== undefined
-      ? new Date(input.endedAt)
-      : current.endedAt;
+    input.endedAt !== undefined ? new Date(input.endedAt) : current.endedAt;
 
   const { habit } = existingActivity;
 
@@ -456,39 +447,22 @@ export async function updateActivity(
       endedAt,
       updatedAt: new Date(),
     })
-    .where(
-      and(
-        eq(activities.id, activityId),
-        eq(activities.userId, userId),
-      ),
-    )
+    .where(and(eq(activities.id, activityId), eq(activities.userId, userId)))
     .returning();
 
   return updatedActivity;
 }
 
-export async function deleteActivity(
-  userId: string,
-  activityId: string,
-) {
+export async function deleteActivity(userId: string, activityId: string) {
   const [deletedActivity] = await db
     .delete(activities)
-    .where(
-      and(
-        eq(activities.id, activityId),
-        eq(activities.userId, userId),
-      ),
-    )
+    .where(and(eq(activities.id, activityId), eq(activities.userId, userId)))
     .returning({
       id: activities.id,
     });
 
   if (!deletedActivity) {
-    throw new AppError(
-      404,
-      "ACTIVITY_NOT_FOUND",
-      "Activity not found",
-    );
+    throw new AppError(404, "ACTIVITY_NOT_FOUND", "Activity not found");
   }
 
   return deletedActivity;
