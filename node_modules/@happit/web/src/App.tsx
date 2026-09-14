@@ -21,6 +21,7 @@ import HabitCatalog from "./components/habits/HabitCatalog";
 import ArchivedHabitList from "./components/habits/ArchivedHabitList";
 import HabitDetail from "./components/habits/HabitDetail";
 import ActivityHistory from "./components/activities/ActivityHistory";
+import ManualActivityForm from "./components/activities/ManualActivityForm";
 
 type AuthMode = "login" | "register";
 
@@ -75,11 +76,12 @@ function AuthenticatedApp({
           Archived
         </button>
 
-        <button
-          type="button"
-          onClick={() => navigate("/app/activities")}
-        >
+        <button type="button" onClick={() => navigate("/app/activities")}>
           Activity history
+        </button>
+
+        <button type="button" onClick={() => navigate("/app/activities/new")}>
+          Log activity
         </button>
       </nav>
 
@@ -88,37 +90,27 @@ function AuthenticatedApp({
           path="/app/habits"
           element={
             <HabitList
-              onSelectHabit={(habitId) =>
-                navigate(`/app/habits/${habitId}`)
-              }
+              onSelectHabit={(habitId) => navigate(`/app/habits/${habitId}`)}
             />
           }
         />
 
-        <Route
-          path="/app/habits/catalog"
-          element={<HabitCatalog />}
-        />
+        <Route path="/app/habits/catalog" element={<HabitCatalog />} />
+
+        <Route path="/app/habits/archived" element={<ArchivedHabitList />} />
+
+        <Route path="/app/activities" element={<ActivityHistory />} />
 
         <Route
-          path="/app/habits/archived"
-          element={<ArchivedHabitList />}
+          path="/app/activities/new"
+          element={
+            <ManualActivityForm onSaved={() => navigate("/app/activities")} />
+          }
         />
 
-        <Route
-          path="/app/activities"
-          element={<ActivityHistory />}
-        />
+        <Route path="/app/habits/:habitId" element={<HabitDetailRoute />} />
 
-        <Route
-          path="/app/habits/:habitId"
-          element={<HabitDetailRoute />}
-        />
-
-        <Route
-          path="*"
-          element={<Navigate to="/app/habits" replace />}
-        />
+        <Route path="*" element={<Navigate to="/app/habits" replace />} />
       </Routes>
 
       {logoutError && <p role="alert">{logoutError}</p>}
@@ -129,11 +121,7 @@ function AuthenticatedApp({
 
       {deleteError && <p role="alert">{deleteError}</p>}
 
-      <button
-        type="button"
-        onClick={onDeleteAccount}
-        disabled={isDeleting}
-      >
+      <button type="button" onClick={onDeleteAccount} disabled={isDeleting}>
         {isDeleting ? "Deleting account..." : "Delete account"}
       </button>
 
@@ -242,18 +230,18 @@ function AppContent() {
     );
   }
 
- if (user) {
-  return (
-    <AuthenticatedApp
-      user={user}
-      onLogout={handleLogout}
-      logoutError={logoutError}
-      onDeleteAccount={handleDeleteAccount}
-      deleteError={deleteError}
-      isDeleting={isDeleting}
-    />
-  );
-}
+  if (user) {
+    return (
+      <AuthenticatedApp
+        user={user}
+        onLogout={handleLogout}
+        logoutError={logoutError}
+        onDeleteAccount={handleDeleteAccount}
+        deleteError={deleteError}
+        isDeleting={isDeleting}
+      />
+    );
+  }
 
   return (
     <main>
