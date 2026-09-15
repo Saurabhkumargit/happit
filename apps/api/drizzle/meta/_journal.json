@@ -57,6 +57,13 @@
       "when": 1789220815011,
       "tag": "0007_mean_plazm",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789398021832,
+      "tag": "0008_sudden_mandrill",
+      "breakpoints": true
     }
   ]
 }
