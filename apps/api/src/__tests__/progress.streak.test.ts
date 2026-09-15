@@ -95,4 +95,17 @@ describe("progress streaks", () => {
       longest: 3,
     });
   });
+
+  it("preserves current streak when future occurrences are upcoming", () => {
+    const result = calculateStreaks([
+      occurrence("2026-09-14", "COMPLETED"),
+      occurrence("2026-09-15", "COMPLETED"),
+      occurrence("2026-09-16", "UPCOMING"),
+    ]);
+
+    expect(result).toEqual({
+      current: 2,
+      longest: 2,
+    });
+  });
 });

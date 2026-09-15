@@ -67,4 +67,44 @@ describe("progress heatmap", () => {
   it("returns an empty array when there are no occurrences", () => {
     expect(buildHeatmapData([])).toEqual([]);
   });
+
+  it("preserves all semantic occurrence states in heatmap", () => {
+    const result = buildHeatmapData([
+      occurrence("2026-09-01", "COMPLETED", 30),
+      occurrence("2026-09-02", "INCOMPLETE", 15),
+      occurrence("2026-09-03", "UPCOMING", 0),
+      occurrence("2026-09-04", "NOT_SCHEDULED", 0),
+    ]);
+
+    expect(result).toEqual([
+      {
+        date: "2026-09-01",
+        state: "COMPLETED",
+        actualValue: 30,
+        targetValue: 30,
+        completionPercentage: 100,
+      },
+      {
+        date: "2026-09-02",
+        state: "INCOMPLETE",
+        actualValue: 15,
+        targetValue: 30,
+        completionPercentage: 50,
+      },
+      {
+        date: "2026-09-03",
+        state: "UPCOMING",
+        actualValue: 0,
+        targetValue: 30,
+        completionPercentage: 0,
+      },
+      {
+        date: "2026-09-04",
+        state: "NOT_SCHEDULED",
+        actualValue: 0,
+        targetValue: 30,
+        completionPercentage: 0,
+      },
+    ]);
+  });
 });

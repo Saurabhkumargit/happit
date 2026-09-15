@@ -691,4 +691,58 @@ it("uses the user's timezone when deriving the adoption start date", async () =>
 
   expect(userHabitId).toBeDefined();
 });
+
+it("rejects missing required query parameters", async () => {
+  const agent = await createAuthenticatedAgent();
+  const exerciseId = await getExerciseId();
+
+  await adoptExercise(agent);
+
+  const response = await agent
+    .get(`/api/v1/progress/habits/${exerciseId}`)
+    .query({})
+    .expect(400);
+
+  expect(response.body.error).toBeDefined();
+});
+});
+
+describe("GET /api/v1/progress/habits/:habitId/heatmap", () => {
+it("requires authentication", async () => {
+  const response = await request(app)
+    .get("/api/v1/progress/habits/00000000-0000-0000-0000-000000000000/heatmap")
+    .query({
+      from: "2026-09-15",
+      to: "2026-09-17",
+      today: "2026-09-15",
+    })
+    .expect(401);
+
+  expect(response.body).toEqual({
+    error: {
+      code: "UNAUTHENTICATED",
+      message: "Authentication required",
+    },
+  });
+});
+});
+
+describe("GET /api/v1/progress", () => {
+it("requires authentication", async () => {
+  const response = await request(app)
+    .get("/api/v1/progress")
+    .query({
+      from: "2026-09-15",
+      to: "2026-09-17",
+      today: "2026-09-15",
+    })
+    .expect(401);
+
+  expect(response.body).toEqual({
+    error: {
+      code: "UNAUTHENTICATED",
+      message: "Authentication required",
+    },
+  });
+});
 });

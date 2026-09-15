@@ -536,4 +536,203 @@ it("evaluates duration targets in seconds using the canonical target unit", asyn
     completionPercentage: 100,
   });
 });
+
+it("aggregates multiple active habits for overall dashboard consistency", async () => {
+  const { getOverallProgress } = await import("../modules/progress/progress.service.js");
+
+  // Create a fresh user to avoid conflicts with other tests
+  const [newUser] = await db
+    .insert(users)
+    .values({
+      email: `progress-dashboard-${crypto.randomUUID()}@example.com`,
+      passwordHash: "test-password-hash",
+      timezone: "UTC",
+    })
+    .returning();
+
+  otherUserId = newUser.id;
+
+  const [habitA] = await db
+    .insert(habits)
+    .values({
+      key: `progress-habit-a-${crypto.randomUUID()}`,
+      name: "Habit A",
+      description: "First habit for dashboard test.",
+      scheduleType: "DAILY",
+      scheduleConfig: {},
+      targetType: "DURATION",
+      targetValue: "30",
+      targetUnit: "minutes",
+      status: "AVAILABLE",
+    })
+    .returning();
+
+  extraHabitIds.push(habitA.id);
+
+  const [userHabitA] = await db
+    .insert(userHabits)
+    .values({
+      userId: newUser.id,
+      habitId: habitA.id,
+      status: "ACTIVE",
+      startDate: new Date("2026-09-01T00:00:00Z"),
+      sortOrder: 1,
+    })
+    .returning();
+
+  extraUserHabitIds.push(userHabitA.id);
+
+  const [habitB] = await db
+    .insert(habits)
+    .values({
+      key: `progress-habit-b-${crypto.randomUUID()}`,
+      name: "Habit B",
+      description: "Second habit for dashboard test.",
+      scheduleType: "DAILY",
+      scheduleConfig: {},
+      targetType: "DURATION",
+      targetValue: "30",
+      targetUnit: "minutes",
+      status: "AVAILABLE",
+    })
+    .returning();
+
+  extraHabitIds.push(habitB.id);
+
+  const [userHabitB] = await db
+    .insert(userHabits)
+    .values({
+      userId: newUser.id,
+      habitId: habitB.id,
+      status: "ACTIVE",
+      startDate: new Date("2026-09-01T00:00:00Z"),
+      sortOrder: 2,
+    })
+    .returning();
+
+  extraUserHabitIds.push(userHabitB.id);
+
+  await createActivity(newUser.id, {
+    userHabitId: userHabitA.id,
+    activityDate: "2026-09-01",
+    source: "MANUAL",
+    durationSeconds: 1800,
+  });
+
+  const result = await getOverallProgress(newUser.id, {
+    from: "2026-09-01",
+    to: "2026-09-01",
+    today: "2026-09-01",
+  });
+
+  expect(result.habits).toHaveLength(2);
+
+  expect(result.consistency).toEqual({
+    completed: 1,
+    expected: 2,
+    percentage: 50,
+  });
+});
+
+it("excludes archived habits from overall dashboard progress", async () => {
+  const { getOverallProgress } = await import("../modules/progress/progress.service.js");
+
+  // Create a fresh user to avoid conflicts with other tests
+  const [newUser] = await db
+    .insert(users)
+    .values({
+      email: `progress-archived-${crypto.randomUUID()}@example.com`,
+      passwordHash: "test-password-hash",
+      timezone: "UTC",
+    })
+    .returning();
+
+  if (!otherUserId) {
+    otherUserId = newUser.id;
+  }
+
+  const [activeHabit] = await db
+    .insert(habits)
+    .values({
+      key: `progress-active-${crypto.randomUUID()}`,
+      name: "Active Habit",
+      description: "Active habit for dashboard test.",
+      scheduleType: "DAILY",
+      scheduleConfig: {},
+      targetType: "DURATION",
+      targetValue: "30",
+      targetUnit: "minutes",
+      status: "AVAILABLE",
+    })
+    .returning();
+
+  extraHabitIds.push(activeHabit.id);
+
+  const [userActiveHabit] = await db
+    .insert(userHabits)
+    .values({
+      userId: newUser.id,
+      habitId: activeHabit.id,
+      status: "ACTIVE",
+      startDate: new Date("2026-09-01T00:00:00Z"),
+      sortOrder: 1,
+    })
+    .returning();
+
+  extraUserHabitIds.push(userActiveHabit.id);
+
+  const [archivedHabit] = await db
+    .insert(habits)
+    .values({
+      key: `progress-archived-${crypto.randomUUID()}`,
+      name: "Archived Habit",
+      description: "Archived habit for dashboard test.",
+      scheduleType: "DAILY",
+      scheduleConfig: {},
+      targetType: "DURATION",
+      targetValue: "30",
+      targetUnit: "minutes",
+      status: "AVAILABLE",
+    })
+    .returning();
+
+  extraHabitIds.push(archivedHabit.id);
+
+  const [userArchivedHabit] = await db
+    .insert(userHabits)
+    .values({
+      userId: newUser.id,
+      habitId: archivedHabit.id,
+      status: "ARCHIVED",
+      startDate: new Date("2026-09-01T00:00:00Z"),
+      archivedAt: new Date("2026-09-02T00:00:00Z"),
+      sortOrder: 2,
+    })
+    .returning();
+
+  extraUserHabitIds.push(userArchivedHabit.id);
+
+  // Create activity for active habit only (can't create activities for archived habits)
+  await createActivity(newUser.id, {
+    userHabitId: userActiveHabit.id,
+    activityDate: "2026-09-01",
+    source: "MANUAL",
+    durationSeconds: 1800,
+  });
+
+  const result = await getOverallProgress(newUser.id, {
+    from: "2026-09-01",
+    to: "2026-09-01",
+    today: "2026-09-01",
+  });
+
+  expect(result.habits).toHaveLength(1);
+  expect(result.habits[0].habit.id).toBe(activeHabit.id);
+
+  expect(result.consistency).toEqual({
+    completed: 1,
+    expected: 1,
+    percentage: 100,
+  });
+});
 });

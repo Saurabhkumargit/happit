@@ -200,4 +200,36 @@ describe("progress schedule engine", () => {
       ),
     ).toThrow("Invalid timezone");
   });
+
+  it("returns zero occurrences when range is entirely before adoption", () => {
+    const result = generateExpectedOccurrences(
+      {
+        scheduleType: "DAILY",
+        scheduleConfig: {},
+      },
+      "2026-09-01",
+      "2026-09-03",
+      "2026-09-10",
+      undefined,
+      "2026-09-15",
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it("returns zero occurrences when range is entirely after effective end", () => {
+    const result = generateExpectedOccurrences(
+      {
+        scheduleType: "DAILY",
+        scheduleConfig: {},
+      },
+      "2026-09-10",
+      "2026-09-15",
+      "2026-09-01",
+      "2026-09-05",
+      "2026-09-15",
+    );
+
+    expect(result).toEqual([]);
+  });
 });

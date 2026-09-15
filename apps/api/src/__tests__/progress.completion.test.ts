@@ -156,3 +156,36 @@ describe("activity aggregation", () => {
     );
   });
 });
+
+describe("target evaluation edge cases", () => {
+  it("marks an occurrence with zero activity as incomplete", () => {
+    const result = evaluateCompletion(
+      target,
+      {
+        date: "2026-09-14",
+        actualValue: 0,
+      },
+      "2026-09-14",
+      "INCOMPLETE",
+    );
+
+    expect(result.state).toBe("INCOMPLETE");
+    expect(result.actualValue).toBe(0);
+    expect(result.completionPercentage).toBe(0);
+  });
+
+  it("preserves NOT_SCHEDULED state even when activity is present", () => {
+    const result = evaluateCompletion(
+      target,
+      {
+        date: "2026-09-13",
+        actualValue: 30,
+      },
+      "2026-09-13",
+      "NOT_SCHEDULED",
+    );
+
+    expect(result.state).toBe("NOT_SCHEDULED");
+    expect(result.actualValue).toBe(30);
+  });
+});
