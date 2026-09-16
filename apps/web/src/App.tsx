@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./App.css";
 import {
   BrowserRouter,
   Navigate,
@@ -24,6 +25,7 @@ import ActivityHistory from "./components/activities/ActivityHistory";
 import ManualActivityForm from "./components/activities/ManualActivityForm";
 import TimerActivityForm from "./components/activities/TimerActivityForm";
 import ActivityDetail from "./components/activities/ActivityDetail";
+import AppShell from "./components/layout/AppShell";
 
 type AuthMode = "login" | "register";
 
@@ -77,52 +79,53 @@ function AuthenticatedApp({
   const navigate = useNavigate();
 
   return (
-    <main>
-      <h1>Happit</h1>
-      <p>Welcome, {user.email}</p>
-
-      <nav aria-label="Habit navigation">
-        <button type="button" onClick={() => navigate("/app/habits")}>
-          My habits
-        </button>
-
-        <button type="button" onClick={() => navigate("/app/habits/catalog")}>
-          Habit catalog
-        </button>
-
-        <button type="button" onClick={() => navigate("/app/habits/archived")}>
-          Archived
-        </button>
-
-        <button type="button" onClick={() => navigate("/app/activities/timer")}>
-          Start timer
-        </button>
-
-        <button type="button" onClick={() => navigate("/app/activities")}>
-          Activity history
-        </button>
-
-        <button type="button" onClick={() => navigate("/app/activities/new")}>
-          Log activity
-        </button>
-      </nav>
-
-      <Routes>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <AppShell
+            userEmail={user.email}
+            onLogout={onLogout}
+            onDeleteAccount={onDeleteAccount}
+            logoutError={logoutError}
+            deleteError={deleteError}
+            isDeleting={isDeleting}
+          />
+        }
+      >
         <Route
-          path="/app/habits"
+          index
+          element={<Navigate to="/app/habits" replace />}
+        />
+
+        <Route
+          path="app/habits"
           element={
             <HabitList
-              onSelectHabit={(habitId) => navigate(`/app/habits/${habitId}`)}
+              onSelectHabit={(habitId) =>
+                navigate(`/app/habits/${habitId}`)
+              }
             />
           }
         />
 
-        <Route path="/app/habits/catalog" element={<HabitCatalog />} />
-
-        <Route path="/app/habits/archived" element={<ArchivedHabitList />} />
+        <Route
+          path="app/habits/catalog"
+          element={<HabitCatalog />}
+        />
 
         <Route
-          path="/app/activities"
+          path="app/habits/archived"
+          element={<ArchivedHabitList />}
+        />
+
+        <Route
+          path="app/habits/:habitId"
+          element={<HabitDetailRoute />}
+        />
+
+        <Route
+          path="app/activities"
           element={
             <ActivityHistory
               onSelectActivity={(activityId) =>
@@ -133,7 +136,7 @@ function AuthenticatedApp({
         />
 
         <Route
-          path="/app/activities/timer"
+          path="app/activities/timer"
           element={
             <TimerActivityForm
               onSaved={() => navigate("/app/activities")}
@@ -142,38 +145,35 @@ function AuthenticatedApp({
         />
 
         <Route
-          path="/app/activities/new"
+          path="app/activities/new"
           element={
-            <ManualActivityForm onSaved={() => navigate("/app/activities")} />
+            <ManualActivityForm
+              onSaved={() => navigate("/app/activities")}
+            />
           }
         />
 
         <Route
-          path="/app/activities/:activityId"
+          path="app/activities/:activityId"
           element={<ActivityDetailRoute />}
         />
 
-        <Route path="/app/habits/:habitId" element={<HabitDetailRoute />} />
+        <Route
+          path="app/progress"
+          element={
+            <section>
+              <h2>Progress</h2>
+              <p>Progress dashboard coming next.</p>
+            </section>
+          }
+        />
 
-        <Route path="*" element={<Navigate to="/app/habits" replace />} />
-      </Routes>
-
-      {logoutError && <p role="alert">{logoutError}</p>}
-
-      <button type="button" onClick={onLogout}>
-        Log out
-      </button>
-
-      {deleteError && <p role="alert">{deleteError}</p>}
-
-      <button type="button" onClick={onDeleteAccount} disabled={isDeleting}>
-        {isDeleting ? "Deleting account..." : "Delete account"}
-      </button>
-
-      <button type="button" onClick={() => navigate("/app/habits")}>
-        Back to my habits
-      </button>
-    </main>
+        <Route
+          path="*"
+          element={<Navigate to="/app/habits" replace />}
+        />
+      </Route>
+    </Routes>
   );
 }
 

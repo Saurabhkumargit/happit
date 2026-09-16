@@ -3,7 +3,6 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 
 import App from "../App";
 import * as api from "../services/api";
-import { getCatalogHabits } from "../services/habitApi";
 
 vi.mock("../services/api");
 
@@ -82,9 +81,8 @@ describe("App authentication", () => {
 
     render(<App />);
 
-    expect(
-      await screen.findByText("Welcome, test@example.com"),
-    ).toBeInTheDocument();
+    const emails = await screen.findAllByText("test@example.com");
+    expect(emails.length).toBeGreaterThan(0);
 
     expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
 
@@ -110,9 +108,8 @@ describe("App authentication", () => {
 
     render(<App />);
 
-    expect(
-      await screen.findByText("Welcome, test@example.com"),
-    ).toBeInTheDocument();
+    const emails = await screen.findAllByText("test@example.com");
+    expect(emails.length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole("button", { name: "Log out" }));
 
@@ -137,9 +134,8 @@ describe("App authentication", () => {
 
     render(<App />);
 
-    expect(
-      await screen.findByText("Welcome, test@example.com"),
-    ).toBeInTheDocument();
+    const emails = await screen.findAllByText("test@example.com");
+    expect(emails.length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole("button", { name: "Delete account" }));
 
@@ -162,15 +158,14 @@ describe("App authentication", () => {
 
     render(<App />);
 
-    expect(
-      await screen.findByText("Welcome, test@example.com"),
-    ).toBeInTheDocument();
+    const emails = await screen.findAllByText("test@example.com");
+    expect(emails.length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole("button", { name: "Delete account" }));
 
     expect(api.deleteAccount).not.toHaveBeenCalled();
 
-    expect(screen.getByText("Welcome, test@example.com")).toBeInTheDocument();
+    expect(screen.getAllByText("test@example.com").length).toBeGreaterThan(0);
   });
 
   it("returns to the login screen when another tab logs out", async () => {
@@ -184,9 +179,8 @@ describe("App authentication", () => {
 
     render(<App />);
 
-    expect(
-      await screen.findByText("Welcome, test@example.com"),
-    ).toBeInTheDocument();
+    const emails = await screen.findAllByText("test@example.com");
+    expect(emails.length).toBeGreaterThan(0);
 
     act(() => {
       MockBroadcastChannel.broadcast("LOGGED_OUT");
@@ -198,75 +192,74 @@ describe("App authentication", () => {
   });
 
   it("switches between my habits and the habit catalog", async () => {
-    const user = {
+  vi.mocked(api.getCurrentUser).mockResolvedValue({
+    user: {
       id: "user-123",
       email: "test@example.com",
       createdAt: "2026-09-07T00:00:00.000Z",
-    };
-
-    vi.mocked(api.getCurrentUser).mockResolvedValue({ user });
-
-    vi.mocked(getCatalogHabits).mockResolvedValue([
-      {
-        id: "habit-1",
-        key: "reading",
-        name: "Reading",
-        description: "Read for personal growth",
-        scheduleType: "DAILY",
-        scheduleConfig: {},
-        targetType: "DURATION",
-        targetValue: "30",
-        targetUnit: "minutes",
-        status: "AVAILABLE",
-        createdAt: "2026-09-08T00:00:00.000Z",
-        updatedAt: "2026-09-08T00:00:00.000Z",
-      },
-    ]);
-
-    render(<App />);
-
-    expect(
-      await screen.findByRole("heading", { name: "Your habits" }),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Habit catalog" }));
-
-    expect(
-      await screen.findByRole("heading", { name: "Choose your habits" }),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "My habits" }));
-
-    expect(
-      await screen.findByRole("heading", { name: "Your habits" }),
-    ).toBeInTheDocument();
+    },
   });
 
-  it("switches between my habits, habit catalog, and archived habits", async () => {
-    vi.mocked(api.getCurrentUser).mockResolvedValue({
-      user: {
-        id: "user-123",
-        email: "test@example.com",
-        createdAt: "2026-09-07T00:00:00.000Z",
-      },
-    });
+  render(<App />);
 
-    render(<App />);
+  expect(
+    await screen.findByRole("heading", { name: "Your habits" }),
+  ).toBeInTheDocument();
 
-    expect(
-      await screen.findByRole("heading", { name: "Your habits" }),
-    ).toBeInTheDocument();
+  fireEvent.click(
+    screen.getByRole("link", { name: "Habit catalog" }),
+  );
 
-    fireEvent.click(screen.getByRole("button", { name: "Archived" }));
+  expect(
+    await screen.findByRole("heading", { name: "Habit catalog" }),
+  ).toBeInTheDocument();
 
-    expect(
-      await screen.findByRole("heading", { name: "Archived habits" }),
-    ).toBeInTheDocument();
+  fireEvent.click(
+    screen.getAllByRole("link", { name: "Habits" })[0],
+  );
 
-    fireEvent.click(screen.getByRole("button", { name: "My habits" }));
+  expect(
+    await screen.findByRole("heading", { name: "Your habits" }),
+  ).toBeInTheDocument();
+});
 
-    expect(
-      await screen.findByRole("heading", { name: "Your habits" }),
-    ).toBeInTheDocument();
+it("switches between my habits, habit catalog, and archived habits", async () => {
+  vi.mocked(api.getCurrentUser).mockResolvedValue({
+    user: {
+      id: "user-123",
+      email: "test@example.com",
+      createdAt: "2026-09-07T00:00:00.000Z",
+    },
   });
+
+  render(<App />);
+
+  expect(
+    await screen.findByRole("heading", { name: "Your habits" }),
+  ).toBeInTheDocument();
+
+  fireEvent.click(
+    screen.getByRole("link", { name: "Habit catalog" }),
+  );
+
+  expect(
+    await screen.findByRole("heading", { name: "Habit catalog" }),
+  ).toBeInTheDocument();
+
+  fireEvent.click(
+    screen.getByRole("link", { name: "Archived" }),
+  );
+
+  expect(
+    await screen.findByRole("heading", { name: "Archived habits" }),
+  ).toBeInTheDocument();
+
+  fireEvent.click(
+    screen.getAllByRole("link", { name: "Habits" })[0],
+  );
+
+  expect(
+    await screen.findByRole("heading", { name: "Your habits" }),
+  ).toBeInTheDocument();
+});
 });
