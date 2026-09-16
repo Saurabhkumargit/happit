@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Archive, ChevronDown, ChevronUp } from "lucide-react";
 
 import {
   getHabits,
@@ -15,10 +16,8 @@ function formatSchedule(habit: UserHabit["habit"]) {
   switch (habit.scheduleType) {
     case "DAILY":
       return "Every day";
-
     case "WEEKDAYS":
       return `Weekdays: ${(habit.scheduleConfig.weekdays ?? []).join(", ")}`;
-
     case "WEEKLY_TARGET":
       return `${habit.scheduleConfig.occurrences ?? 0} times per week`;
   }
@@ -26,7 +25,6 @@ function formatSchedule(habit: UserHabit["habit"]) {
 
 function formatTarget(habit: UserHabit["habit"]) {
   const unit = habit.targetUnit ? ` ${habit.targetUnit}` : "";
-
   return `${habit.targetValue}${unit}`;
 }
 
@@ -44,9 +42,7 @@ function HabitList({ onSelectHabit }: HabitListProps) {
     async function loadHabits() {
       try {
         setError(null);
-
         const result = await getHabits();
-
         setHabits(result);
       } catch (error) {
         setLoadError(
@@ -94,8 +90,8 @@ function HabitList({ onSelectHabit }: HabitListProps) {
     }
 
     const previousHabits = habits;
-
     const reorderedHabits = [...habits];
+
     [reorderedHabits[currentIndex], reorderedHabits[targetIndex]] = [
       reorderedHabits[targetIndex],
       reorderedHabits[currentIndex],
@@ -106,10 +102,9 @@ function HabitList({ onSelectHabit }: HabitListProps) {
     setReorderingHabitId(habitId);
 
     try {
-      await reorderHabits(reorderedHabits.map((habit) => habit.id));
+      await reorderHabits(reorderedHabits.map((habit) => habit.habitId));
     } catch (error) {
       setHabits(previousHabits);
-
       setError(
         error instanceof Error ? error.message : "Unable to reorder habits",
       );
@@ -119,85 +114,156 @@ function HabitList({ onSelectHabit }: HabitListProps) {
   }
 
   if (isLoading) {
-    return <p>Loading habits...</p>;
+    return (
+      <section className="habit-list-page" aria-busy="true">
+        <div className="page-header">
+          <p className="eyebrow">Habits</p>
+          <h2>Your habits</h2>
+        </div>
+
+        <p className="sr-only">Loading habits...</p>
+        <div className="habit-list">
+          {[1, 2, 3].map((item) => (
+            <div className="habit-card habit-card-skeleton" key={item}>
+              <div className="skeleton skeleton-title" />
+              <div className="skeleton skeleton-text" />
+              <div className="skeleton skeleton-meta" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
   }
 
   if (loadError) {
-    return <p role="alert">{loadError}</p>;
+    return (
+      <section className="habit-list-page">
+        <div className="page-header">
+          <p className="eyebrow">Habits</p>
+          <h2>Your habits</h2>
+        </div>
+
+        <div className="state-card state-card-error" role="alert">
+          <p className="state-label">Something went wrong</p>
+          <p>{loadError}</p>
+        </div>
+      </section>
+    );
   }
 
   if (habits.length === 0) {
     return (
-      <section>
-        <h2>Your habits</h2>
-        <p>You don't have any active habits yet.</p>
+      <section className="habit-list-page">
+        <div className="page-header">
+          <p className="eyebrow">Habits</p>
+          <h2>Your habits</h2>
+        </div>
+
+        <div className="state-card">
+          <p className="state-label">No habits yet</p>
+
+          <p>You don't have any active habits yet.</p>
+
+          <p>Choose a habit from the catalog to get started.</p>
+        </div>
       </section>
     );
   }
 
   return (
-    <section>
-      <h2>Your habits</h2>
+    <section className="habit-list-page">
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Habits</p>
+          <h2>Your habits</h2>
+        </div>
 
-      {error && <p role="alert">{error}</p>}
+        <p className="page-description">
+          Your active habits and their current targets.
+        </p>
+      </div>
 
-      <ul>
+      {error && (
+        <div className="state-card state-card-error" role="alert">
+          <p>{error}</p>
+        </div>
+      )}
+
+      <ul className="habit-list">
         {habits.map((userHabit, currentIndex) => {
           const habit = userHabit.habit;
+          const isReordering = reorderingHabitId !== null;
+          const isArchiving = archivingHabitId === userHabit.habitId;
 
           return (
-            <li key={userHabit.id}>
-              <h3>
-                <button
-                  type="button"
-                  onClick={() => onSelectHabit?.(userHabit.habitId)}
-                >
-                  {habit.name}
-                </button>
-              </h3>
+            <li className="habit-card" key={userHabit.id}>
+              <div className="habit-card-main">
+                <div className="habit-card-heading">
+                  <h3>
+                    <button
+                      type="button"
+                      className="habit-name-button"
+                      onClick={() => onSelectHabit?.(userHabit.habitId)}
+                    >
+                      {habit.name}
+                    </button>
+                  </h3>
+                </div>
 
-              {habit.description && <p>{habit.description}</p>}
+                {habit.description && (
+                  <p className="habit-description">{habit.description}</p>
+                )}
 
-              <p>
-                <strong>Schedule:</strong> {formatSchedule(habit)}
-              </p>
+                <div className="habit-meta">
+                  <div className="habit-meta-item">
+                    <span className="habit-meta-label">Schedule</span>
+                    <span>{formatSchedule(habit)}</span>
+                  </div>
 
-              <p>
-                <strong>Target:</strong> {formatTarget(habit)}
-              </p>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => handleReorder(userHabit.id, "up")}
-                  disabled={currentIndex === 0 || reorderingHabitId !== null}
-                  aria-label={`Move ${userHabit.habit.name} up`}
-                >
-                  ↑
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleReorder(userHabit.id, "down")}
-                  disabled={
-                    currentIndex === habits.length - 1 ||
-                    reorderingHabitId !== null
-                  }
-                  aria-label={`Move ${userHabit.habit.name} down`}
-                >
-                  ↓
-                </button>
+                  <div className="habit-meta-item">
+                    <span className="habit-meta-label">Target</span>
+                    <span className="habit-target">{formatTarget(habit)}</span>
+                  </div>
+                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleArchive(userHabit.habitId)}
-                disabled={archivingHabitId === userHabit.habitId}
-              >
-                {archivingHabitId === userHabit.habitId
-                  ? "Archiving..."
-                  : "Archive"}
-              </button>
+              <div className="habit-card-actions">
+                <div className="habit-order-actions">
+                  <button
+                    type="button"
+                    className="icon-button"
+                    onClick={() => handleReorder(userHabit.id, "up")}
+                    disabled={currentIndex === 0 || isReordering}
+                    aria-label={`Move ${userHabit.habit.name} up`}
+                    title="Move up"
+                  >
+                    <ChevronUp aria-hidden="true" size={17} />
+                  </button>
+
+                  <button
+                    type="button"
+                    className="icon-button"
+                    onClick={() => handleReorder(userHabit.id, "down")}
+                    disabled={
+                      currentIndex === habits.length - 1 || isReordering
+                    }
+                    aria-label={`Move ${userHabit.habit.name} down`}
+                    title="Move down"
+                  >
+                    <ChevronDown aria-hidden="true" size={17} />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  className="archive-button"
+                  onClick={() => handleArchive(userHabit.habitId)}
+                  disabled={isArchiving}
+                >
+                  <Archive aria-hidden="true" size={16} />
+                  <span>{isArchiving ? "Archiving..." : "Archive"}</span>
+                </button>
+              </div>
             </li>
           );
         })}

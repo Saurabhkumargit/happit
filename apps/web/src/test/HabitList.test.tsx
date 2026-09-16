@@ -281,12 +281,7 @@ describe("HabitList", () => {
       }),
     ).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(mockedReorderHabits).toHaveBeenCalledWith([
-        "user-habit-2",
-        "user-habit-1",
-      ]);
-    });
+    expect(mockedReorderHabits).toHaveBeenCalledWith(["habit-2", "habit-1"]);
 
     const headings = screen.getAllByRole("heading", { level: 3 });
 
@@ -319,12 +314,7 @@ describe("HabitList", () => {
       }),
     );
 
-    await waitFor(() => {
-      expect(mockedReorderHabits).toHaveBeenCalledWith([
-        "user-habit-2",
-        "user-habit-1",
-      ]);
-    });
+    expect(mockedReorderHabits).toHaveBeenCalledWith(["habit-2", "habit-1"]);
 
     const headings = screen.getAllByRole("heading", { level: 3 });
 
