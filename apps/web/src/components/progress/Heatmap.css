@@ -1,0 +1,85 @@
+.heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.heatmap-grid {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+  padding: var(--space-2) 0;
+}
+
+.heatmap-week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.heatmap-day {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  transition: transform 0.15s ease;
+}
+
+.heatmap-day:not(.heatmap-day-empty):hover {
+  transform: scale(1.3);
+  outline: 1px solid var(--color-border-strong);
+  cursor: pointer;
+}
+
+.heatmap-day-empty {
+  background: transparent;
+}
+
+.heatmap-day-intensity-0 {
+  background: var(--color-surface-secondary);
+}
+
+.heatmap-day-intensity-1 {
+  background: rgb(167 139 250 / 20%);
+}
+
+.heatmap-day-intensity-2 {
+  background: rgb(167 139 250 / 40%);
+}
+
+.heatmap-day-intensity-3 {
+  background: rgb(167 139 250 / 70%);
+}
+
+.heatmap-day-intensity-4 {
+  background: var(--color-primary);
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.heatmap-legend-label {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.heatmap-legend-scale {
+  display: flex;
+  gap: 2px;
+}
+
+.heatmap-legend-item {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+  .heatmap-grid {
+    padding: var(--space-2);
+  }
+}

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 import HabitCatalog from "../components/habits/HabitCatalog";
 import {
@@ -14,6 +15,10 @@ vi.mock("../services/habitApi", () => ({
 
 const mockedGetCatalogHabits = vi.mocked(getCatalogHabits);
 const mockedAdoptHabit = vi.mocked(adoptHabit);
+
+function renderWithRouter(ui: React.ReactElement) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
 
 const catalogHabit = {
   id: "habit-1",
@@ -38,17 +43,15 @@ describe("HabitCatalog", () => {
   it("shows a loading state", () => {
     mockedGetCatalogHabits.mockReturnValue(new Promise(() => {}));
 
-    render(<HabitCatalog />);
+    renderWithRouter(<HabitCatalog />);
 
-    expect(
-      screen.getByText("Loading habit catalog..."),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
   it("renders catalog habits", async () => {
     mockedGetCatalogHabits.mockResolvedValue([catalogHabit]);
 
-    render(<HabitCatalog />);
+    renderWithRouter(<HabitCatalog />);
 
     expect(
       await screen.findByRole("heading", { name: "Reading" }),
@@ -81,7 +84,7 @@ describe("HabitCatalog", () => {
       habit: catalogHabit,
     });
 
-    render(<HabitCatalog />);
+    renderWithRouter(<HabitCatalog />);
 
     const button = await screen.findByRole("button", {
       name: "Add to my habits",
@@ -91,20 +94,20 @@ describe("HabitCatalog", () => {
 
     expect(mockedAdoptHabit).toHaveBeenCalledWith("habit-1");
 
-    expect(
-      await screen.findByRole("status"),
-    ).toHaveTextContent("Reading added to your habits.");
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Added to your habits/i }),
+      ).toBeInTheDocument();
+    });
   });
 
   it("shows an empty state when the catalog is empty", async () => {
     mockedGetCatalogHabits.mockResolvedValue([]);
 
-    render(<HabitCatalog />);
+    renderWithRouter(<HabitCatalog />);
 
     expect(
-      await screen.findByText(
-        "No habits are currently available.",
-      ),
+      await screen.findByText(/catalog is currently empty/i),
     ).toBeInTheDocument();
   });
 
@@ -113,7 +116,7 @@ describe("HabitCatalog", () => {
       new Error("Unable to connect to the server"),
     );
 
-    render(<HabitCatalog />);
+    renderWithRouter(<HabitCatalog />);
 
     expect(
       await screen.findByRole("alert"),

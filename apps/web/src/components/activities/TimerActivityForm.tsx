@@ -10,6 +10,12 @@ import {
   type Activity,
 } from "../../services/activityApi";
 
+import {
+  saveTimerState,
+  loadTimerState,
+  clearTimerState,
+} from "../../lib/timerStorage";
+
 interface TimerActivityFormProps {
   onSaved?: (activity: Activity) => void;
 }
@@ -59,7 +65,34 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
         const result = await getHabits();
         setHabits(result);
 
-        if (result.length > 0) {
+        // Try to restore timer state
+        const savedState = loadTimerState();
+        if (savedState && result.length > 0) {
+          const habit = result.find((h) => h.id === savedState.habitId);
+          if (habit) {
+            // Restore timer state
+            setSelectedHabitId(savedState.habitId);
+            startedAtRef.current = savedState.startedAt;
+            accumulatedSecondsRef.current = savedState.accumulatedSeconds;
+
+            if (savedState.state === "RUNNING" && savedState.runningSince) {
+              // Calculate elapsed time since last save
+              const now = Date.now();
+              const additionalSeconds = Math.floor(
+                (now - savedState.runningSince) / 1000
+              );
+              accumulatedSecondsRef.current += additionalSeconds;
+              runningSinceRef.current = now;
+              setTimerState("RUNNING");
+            } else {
+              setTimerState("PAUSED");
+            }
+
+            setElapsedSeconds(accumulatedSecondsRef.current);
+          } else {
+            clearTimerState();
+          }
+        } else if (result.length > 0) {
           setSelectedHabitId(result[0].id);
         }
       } catch (error) {
@@ -93,12 +126,27 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
         );
 
       setElapsedSeconds(currentElapsed);
+
+      // Persist state every 10 seconds while running
+      if (currentElapsed % 10 === 0 && selectedHabitId && startedAtRef.current) {
+        const habit = habits.find((h) => h.id === selectedHabitId);
+        if (habit) {
+          saveTimerState({
+            habitId: selectedHabitId,
+            habitName: habit.habit.name,
+            startedAt: startedAtRef.current,
+            accumulatedSeconds: currentElapsed,
+            runningSince: runningSinceRef.current,
+            state: "RUNNING",
+          });
+        }
+      }
     }, 250);
 
     return () => {
       window.clearInterval(interval);
     };
-  }, [timerState]);
+  }, [timerState, selectedHabitId, habits]);
 
   const selectedHabit = habits.find(
     (habit) => habit.id === selectedHabitId,
@@ -139,6 +187,21 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
 
     setElapsedSeconds(accumulatedSecondsRef.current);
     setTimerState("PAUSED");
+
+    // Save paused state
+    if (selectedHabitId && startedAtRef.current) {
+      const habit = habits.find((h) => h.id === selectedHabitId);
+      if (habit) {
+        saveTimerState({
+          habitId: selectedHabitId,
+          habitName: habit.habit.name,
+          startedAt: startedAtRef.current,
+          accumulatedSeconds: accumulatedSecondsRef.current,
+          runningSince: null,
+          state: "PAUSED",
+        });
+      }
+    }
   }
 
   function handleResume() {
@@ -184,6 +247,9 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
     setSaveError(null);
     setIdempotencyKey(null);
     setTimerState("IDLE");
+
+    // Clear persisted state
+    clearTimerState();
   }
 
   function createIdempotencyKey() {
@@ -216,6 +282,9 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
         },
         key,
       );
+
+      // Clear persisted state on successful save
+      clearTimerState();
 
       onSaved?.(activity);
     } catch (error) {

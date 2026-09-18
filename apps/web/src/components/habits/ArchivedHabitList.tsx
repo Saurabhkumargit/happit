@@ -61,7 +61,9 @@ function ArchivedHabitList() {
 
       await restoreHabit(habitId);
 
-      setHabits((current) => current.filter((habit) => habit.id !== habitId));
+      setHabits((current) =>
+        current.filter((habit) => habit.habitId !== habitId),
+      );
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Unable to restore habit",
@@ -141,10 +143,12 @@ function ArchivedHabitList() {
 
             <button
               type="button"
-              onClick={() => handleRestore(userHabit.id)}
-              disabled={restoringHabitId === userHabit.id}
+              onClick={() => handleRestore(userHabit.habitId)}
+              disabled={restoringHabitId === userHabit.habitId}
             >
-              {restoringHabitId === userHabit.id ? "Restoring..." : "Restore"}
+              {restoringHabitId === userHabit.habitId
+                ? "Restoring..."
+                : "Restore"}
             </button>
 
             <button

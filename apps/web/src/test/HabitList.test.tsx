@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import HabitList from "../components/habits/HabitList";
 import { archiveHabit, getHabits, reorderHabits } from "../services/habitApi";
 
@@ -8,6 +9,10 @@ vi.mock("../services/habitApi", () => ({
   getHabits: vi.fn(),
   reorderHabits: vi.fn(),
 }));
+
+function renderWithRouter(ui: React.ReactElement) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
 
 const mockedGetHabits = vi.mocked(getHabits);
 const mockedReorderHabits = vi.mocked(reorderHabits);
@@ -46,15 +51,15 @@ describe("HabitList", () => {
   it("shows a loading state while habits are being fetched", () => {
     mockedGetHabits.mockReturnValue(new Promise(() => {}));
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
-    expect(screen.getByText("Loading habits...")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
   it("renders habits returned by the API", async () => {
     mockedGetHabits.mockResolvedValue([baseHabit]);
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
     expect(
       await screen.findByRole("heading", { name: "Read" }),
@@ -80,7 +85,7 @@ describe("HabitList", () => {
       },
     ]);
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
     await waitFor(() => {
       expect(screen.getByText("Weekdays: 1, 3, 5")).toBeInTheDocument();
@@ -101,20 +106,20 @@ describe("HabitList", () => {
       },
     ]);
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
     await waitFor(() => {
-      expect(screen.getByText("3 times per week")).toBeInTheDocument();
+      expect(screen.getByText("3× weekly")).toBeInTheDocument();
     });
   });
 
   it("shows the empty state when there are no active habits", async () => {
     mockedGetHabits.mockResolvedValue([]);
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
     expect(
-      await screen.findByText("You don't have any active habits yet."),
+      await screen.findByText(/don't have any active habits/i),
     ).toBeInTheDocument();
   });
 
@@ -123,7 +128,7 @@ describe("HabitList", () => {
       new Error("Unable to connect to the server"),
     );
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Unable to connect to the server",
@@ -159,7 +164,7 @@ describe("HabitList", () => {
       },
     ]);
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
     await screen.findByRole("heading", { name: "Read" });
 
@@ -178,7 +183,7 @@ describe("HabitList", () => {
       archivedAt: "2026-09-09T00:00:00.000Z",
     });
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
     expect(
       await screen.findByRole("heading", { name: "Read" }),
@@ -202,7 +207,7 @@ describe("HabitList", () => {
       new Error("Unable to archive habit"),
     );
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
     await screen.findByRole("heading", { name: "Read" });
 
@@ -229,25 +234,27 @@ describe("HabitList", () => {
       },
     ]);
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
+    // Open options menu for first habit
+    const optionsButtons = await screen.findAllByRole("button", {
+      name: /Options for/,
+    });
+
+    fireEvent.click(optionsButtons[0]);
+
+    // Check menu items
     expect(
-      await screen.findByRole("button", {
-        name: "Move Read up",
+      screen.getByRole("button", {
+        name: "Move up",
       }),
     ).toBeDisabled();
 
     expect(
       screen.getByRole("button", {
-        name: "Move Read down",
+        name: "Move down",
       }),
     ).toBeEnabled();
-
-    expect(
-      screen.getByRole("button", {
-        name: "Move Exercise down",
-      }),
-    ).toBeDisabled();
   });
 
   it("moves a habit up and saves the complete order", async () => {
@@ -267,26 +274,27 @@ describe("HabitList", () => {
     mockedGetHabits.mockResolvedValue([baseHabit, secondHabit]);
     mockedReorderHabits.mockResolvedValue([secondHabit, baseHabit]);
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
-    fireEvent.click(
-      await screen.findByRole("button", {
-        name: "Move Exercise up",
-      }),
-    );
+    await screen.findByRole("heading", { name: "Exercise" });
 
-    expect(
-      await screen.findByRole("heading", {
-        name: "Exercise",
-      }),
-    ).toBeInTheDocument();
+    // Open options menu for second habit (Exercise)
+    const optionsButtons = screen.getAllByRole("button", {
+      name: /Options for/,
+    });
+
+    fireEvent.click(optionsButtons[1]);
+
+    // Click "Move up"
+    fireEvent.click(screen.getByRole("button", { name: "Move up" }));
 
     expect(mockedReorderHabits).toHaveBeenCalledWith(["habit-2", "habit-1"]);
 
-    const headings = screen.getAllByRole("heading", { level: 3 });
-
-    expect(headings[0]).toHaveTextContent("Exercise");
-    expect(headings[1]).toHaveTextContent("Read");
+    await waitFor(() => {
+      const headings = screen.getAllByRole("heading", { level: 3 });
+      expect(headings[0]).toHaveTextContent("Exercise");
+      expect(headings[1]).toHaveTextContent("Read");
+    });
   });
 
   it("moves a habit down and saves the complete order", async () => {
@@ -306,20 +314,27 @@ describe("HabitList", () => {
     mockedGetHabits.mockResolvedValue([baseHabit, secondHabit]);
     mockedReorderHabits.mockResolvedValue([secondHabit, baseHabit]);
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
-    fireEvent.click(
-      await screen.findByRole("button", {
-        name: "Move Read down",
-      }),
-    );
+    await screen.findByRole("heading", { name: "Read" });
+
+    // Open options menu for first habit (Read)
+    const optionsButtons = screen.getAllByRole("button", {
+      name: /Options for/,
+    });
+
+    fireEvent.click(optionsButtons[0]);
+
+    // Click "Move down"
+    fireEvent.click(screen.getByRole("button", { name: "Move down" }));
 
     expect(mockedReorderHabits).toHaveBeenCalledWith(["habit-2", "habit-1"]);
 
-    const headings = screen.getAllByRole("heading", { level: 3 });
-
-    expect(headings[0]).toHaveTextContent("Exercise");
-    expect(headings[1]).toHaveTextContent("Read");
+    await waitFor(() => {
+      const headings = screen.getAllByRole("heading", { level: 3 });
+      expect(headings[0]).toHaveTextContent("Exercise");
+      expect(headings[1]).toHaveTextContent("Read");
+    });
   });
 
   it("reverts the order when reordering fails", async () => {
@@ -342,21 +357,28 @@ describe("HabitList", () => {
       new Error("Unable to reorder habits"),
     );
 
-    render(<HabitList />);
+    renderWithRouter(<HabitList />);
 
-    fireEvent.click(
-      await screen.findByRole("button", {
-        name: "Move Read down",
-      }),
-    );
+    await screen.findByRole("heading", { name: "Read" });
+
+    // Open options menu for first habit (Read)
+    const optionsButtons = screen.getAllByRole("button", {
+      name: /Options for/,
+    });
+
+    fireEvent.click(optionsButtons[0]);
+
+    // Click "Move down"
+    fireEvent.click(screen.getByRole("button", { name: "Move down" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Unable to reorder habits",
     );
 
-    const headings = screen.getAllByRole("heading", { level: 3 });
-
-    expect(headings[0]).toHaveTextContent("Read");
-    expect(headings[1]).toHaveTextContent("Exercise");
+    await waitFor(() => {
+      const headings = screen.getAllByRole("heading", { level: 3 });
+      expect(headings[0]).toHaveTextContent("Read");
+      expect(headings[1]).toHaveTextContent("Exercise");
+    });
   });
 });

@@ -26,6 +26,7 @@ import ManualActivityForm from "./components/activities/ManualActivityForm";
 import TimerActivityForm from "./components/activities/TimerActivityForm";
 import ActivityDetail from "./components/activities/ActivityDetail";
 import AppShell from "./components/layout/AppShell";
+import Progress from "./components/progress/Progress";
 
 type AuthMode = "login" | "register";
 
@@ -158,15 +159,7 @@ function AuthenticatedApp({
           element={<ActivityDetailRoute />}
         />
 
-        <Route
-          path="app/progress"
-          element={
-            <section>
-              <h2>Progress</h2>
-              <p>Progress dashboard coming next.</p>
-            </section>
-          }
-        />
+        <Route path="app/progress" element={<Progress />} />
 
         <Route
           path="*"

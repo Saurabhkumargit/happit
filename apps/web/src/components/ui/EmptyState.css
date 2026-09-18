@@ -1,0 +1,25 @@
+.empty-state {
+  padding: var(--space-8) var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.empty-state-title {
+  margin-bottom: var(--space-2);
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.empty-state-description {
+  margin-bottom: var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.empty-state-action {
+  margin-top: var(--space-6);
+}

@@ -1,0 +1,271 @@
+.habit-list-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.habit-list-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+}
+
+.habit-list-error {
+  margin-bottom: var(--space-6);
+}
+
+.habit-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.habit-card {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.habit-card:hover {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border-strong);
+}
+
+.habit-card:active {
+  cursor: grabbing;
+}
+
+.habit-card-dragging {
+  opacity: 0.6;
+  transform: scale(0.98);
+  box-shadow: 0 8px 24px rgb(167 139 250 / 20%);
+  border-color: var(--color-primary);
+  z-index: 100;
+}
+
+.habit-card-drag-over {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.habit-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.habit-name-button {
+  width: 100%;
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.habit-name-button:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+.habit-name-button:disabled {
+  cursor: default;
+}
+
+.habit-name {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.habit-description {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.habit-meta {
+  display: flex;
+  gap: var(--space-8);
+  margin-top: auto;
+}
+
+.habit-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.habit-meta-label {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.habit-meta-value {
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.habit-card-actions {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.habit-menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.habit-menu-button:hover {
+  background: var(--color-surface-secondary);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.habit-menu-button[aria-expanded="true"] {
+  background: var(--color-surface-secondary);
+  color: var(--color-primary);
+}
+
+.habit-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: var(--space-2);
+  min-width: 140px;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.habit-menu-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.habit-menu-item:hover:not(:disabled) {
+  background: var(--color-surface-secondary);
+}
+
+.habit-menu-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.habit-archive-button {
+  margin-top: auto;
+}
+
+.habit-archive-text {
+  display: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (min-width: 640px) {
+  .habit-archive-text {
+    display: inline;
+  }
+}
+
+@media (max-width: 768px) {
+  .habit-list-page {
+    gap: var(--space-8);
+  }
+
+  .habit-card {
+    flex-direction: column;
+    padding: var(--space-5);
+  }
+
+  .habit-card-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .habit-menu {
+    right: auto;
+    left: 0;
+  }
+
+  .habit-meta {
+    gap: var(--space-6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-card,
+  .habit-menu-button {
+    transition: none;
+  }
+
+  .habit-card-dragging {
+    transform: none;
+  }
+}

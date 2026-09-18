@@ -1,0 +1,3 @@
+<!-- Temporary simple PNG icon as base64 data URL -->
+<!-- This is a minimal valid 192x192 PNG icon for PWA -->
+<!-- Production should use proper icon generation tools -->
