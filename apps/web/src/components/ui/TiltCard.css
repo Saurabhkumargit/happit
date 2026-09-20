@@ -1,0 +1,109 @@
+.tilt-card {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgb(255 255 255 / 2.5%),
+      rgb(255 255 255 / 0.5%)
+    ),
+    var(--color-surface);
+
+  border: 1px solid var(--color-border);
+
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 220ms ease;
+}
+
+.tilt-card-hover {
+  isolation: isolate;
+}
+
+.tilt-card-hover::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      500px circle at 50% -20%,
+      rgb(167 139 250 / 0.12),
+      transparent 55%
+    );
+
+  opacity: 0;
+
+  transition: opacity 220ms ease;
+
+  z-index: 0;
+}
+
+.tilt-card-hover:hover {
+  border-color: rgb(167 139 250 / 28%);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgb(167 139 250 / 5%),
+      rgb(255 255 255 / 1%)
+    ),
+    var(--color-surface);
+
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 20%),
+    0 0 0 1px rgb(167 139 250 / 5%);
+}
+
+.tilt-card-hover:hover::before {
+  opacity: 1;
+}
+
+/*
+ * Keeps the actual card content above
+ * the hover effect.
+ */
+.tilt-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.tilt-card-glare {
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      450px circle at 50% 0%,
+      rgb(167 139 250 / 0.14),
+      transparent 60%
+    );
+
+  opacity: 0;
+
+  transition: opacity 220ms ease;
+
+  z-index: 0;
+}
+
+.tilt-card-hover:hover .tilt-card-glare {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt-card,
+  .tilt-card::before,
+  .tilt-card-glare {
+    transition: none;
+  }
+}

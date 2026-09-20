@@ -1,5 +1,15 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Archive, MoreVertical } from "lucide-react";
+import {
+  Activity,
+  Archive,
+  BookOpen,
+  Brain,
+  Dumbbell,
+  Droplets,
+  MoreVertical,
+  Moon,
+  Sparkles,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -14,6 +24,7 @@ import Button from "../ui/Button";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import ErrorState from "../ui/ErrorState";
 import EmptyState from "../ui/EmptyState";
+import { TiltCard } from "../ui/TiltCard";
 
 import "./HabitList.css";
 
@@ -35,6 +46,42 @@ function formatSchedule(habit: UserHabit["habit"]) {
 function formatTarget(habit: UserHabit["habit"]) {
   const unit = habit.targetUnit ? ` ${habit.targetUnit}` : "";
   return `${habit.targetValue}${unit}`;
+}
+
+function getHabitIcon(habit: UserHabit["habit"]) {
+  const key = habit.key.toLowerCase();
+  const name = habit.name.toLowerCase();
+
+  if (
+    key.includes("exercise") ||
+    key.includes("workout") ||
+    name.includes("exercise") ||
+    name.includes("workout")
+  ) {
+    return <Dumbbell size={23} strokeWidth={1.8} />;
+  }
+
+  if (key.includes("read") || name.includes("read")) {
+    return <BookOpen size={23} strokeWidth={1.8} />;
+  }
+
+  if (key.includes("water") || name.includes("water")) {
+    return <Droplets size={23} strokeWidth={1.8} />;
+  }
+
+  if (key.includes("sleep") || name.includes("sleep")) {
+    return <Moon size={23} strokeWidth={1.8} />;
+  }
+
+  if (key.includes("meditat") || name.includes("meditat")) {
+    return <Brain size={23} strokeWidth={1.8} />;
+  }
+
+  if (key.includes("activity") || name.includes("activity")) {
+    return <Activity size={23} strokeWidth={1.8} />;
+  }
+
+  return <Sparkles size={23} strokeWidth={1.8} />;
 }
 
 function HabitList({ onSelectHabit }: HabitListProps) {
@@ -256,11 +303,7 @@ function HabitList({ onSelectHabit }: HabitListProps) {
 
   return (
     <section className="habit-list-page">
-      <PageHeader
-        eyebrow="Habits"
-        title="Your habits"
-        description="Long-press to reorder"
-      />
+      <PageHeader eyebrow="Habits" title="Your habits" />
 
       <div
         id="reorder-announcer"
@@ -285,95 +328,121 @@ function HabitList({ onSelectHabit }: HabitListProps) {
           return (
             <li
               key={userHabit.id}
-              className={`habit-card ${isDragging ? "habit-card-dragging" : ""} ${isDragOver ? "habit-card-drag-over" : ""}`}
+              className={`habit-card-wrapper ${
+                isDragging ? "habit-card-dragging" : ""
+              } ${isDragOver ? "habit-card-drag-over" : ""}`}
               onPointerDown={(e) => handlePointerDown(e, index)}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerCancel={handlePointerUp}
             >
-              <div className="habit-card-content">
-                <button
-                  type="button"
-                  className="habit-name-button"
-                  onClick={() => onSelectHabit?.(userHabit.habitId)}
-                  disabled={isDragging}
-                >
-                  <h3 className="habit-name">{habit.name}</h3>
-                  {habit.description && (
-                    <p className="habit-description">{habit.description}</p>
-                  )}
-                </button>
+              <TiltCard className="habit-card">
+                <div className="habit-card-content">
+                  <div className="habit-heading-row">
+                    <div className="habit-icon" aria-hidden="true">
+                      {getHabitIcon(habit)}
+                    </div>
 
-                <div className="habit-meta">
-                  <div className="habit-meta-item">
-                    <span className="habit-meta-label">Target</span>
-                    <span className="habit-meta-value">
-                      {formatTarget(habit)}
-                    </span>
+                    <button
+                      type="button"
+                      className="habit-name-button"
+                      onClick={() => onSelectHabit?.(userHabit.habitId)}
+                      disabled={isDragging}
+                    >
+                      <h3 className="habit-name">{habit.name}</h3>
+
+                      {habit.description && (
+                        <p className="habit-description">{habit.description}</p>
+                      )}
+                    </button>
                   </div>
-                  <div className="habit-meta-item">
-                    <span className="habit-meta-label">Schedule</span>
-                    <span className="habit-meta-value">
-                      {formatSchedule(habit)}
-                    </span>
+
+                  <div className="habit-meta">
+                    <div className="habit-meta-item">
+                      <span className="habit-meta-label">Target</span>
+
+                      <span className="habit-meta-value">
+                        {formatTarget(habit)}
+                      </span>
+                    </div>
+
+                    <div className="habit-meta-item">
+                      <span className="habit-meta-label">Schedule</span>
+
+                      <span className="habit-meta-value">
+                        {formatSchedule(habit)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="habit-card-actions">
-                <button
-                  type="button"
-                  className="habit-menu-button"
-                  onClick={() =>
-                    setShowReorderMenu(showReorderMenu === index ? null : index)
-                  }
-                  aria-label={`Options for ${habit.name}`}
-                  aria-expanded={showReorderMenu === index}
-                  aria-haspopup="true"
-                >
-                  <MoreVertical size={18} aria-hidden="true" />
-                </button>
+                <div className="habit-card-actions">
+                  <button
+                    type="button"
+                    className="habit-menu-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
 
-                {showReorderMenu === index && (
-                  <div className="habit-menu">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleKeyboardReorder(index, "up");
-                        setShowReorderMenu(null);
-                      }}
-                      disabled={index === 0 || isReordering}
-                      className="habit-menu-item"
+                      setShowReorderMenu(
+                        showReorderMenu === index ? null : index,
+                      );
+                    }}
+                    aria-label={`Options for ${habit.name}`}
+                    aria-expanded={showReorderMenu === index}
+                    aria-haspopup="true"
+                  >
+                    <MoreVertical size={18} aria-hidden="true" />
+                  </button>
+
+                  {showReorderMenu === index && (
+                    <div
+                      className="habit-menu"
+                      onPointerDown={(e) => e.stopPropagation()}
                     >
-                      Move up
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleKeyboardReorder(index, "down");
-                        setShowReorderMenu(null);
-                      }}
-                      disabled={index === habits.length - 1 || isReordering}
-                      className="habit-menu-item"
-                    >
-                      Move down
-                    </button>
-                  </div>
-                )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleKeyboardReorder(index, "up");
+                          setShowReorderMenu(null);
+                        }}
+                        disabled={index === 0 || isReordering}
+                        className="habit-menu-item"
+                      >
+                        Move up
+                      </button>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleArchive(userHabit.habitId)}
-                  disabled={isArchiving}
-                  className="habit-archive-button"
-                >
-                  <Archive aria-hidden="true" size={16} />
-                  <span className="habit-archive-text">
-                    {isArchiving ? "Archiving..." : "Archive"}
-                  </span>
-                </Button>
-              </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleKeyboardReorder(index, "down");
+                          setShowReorderMenu(null);
+                        }}
+                        disabled={index === habits.length - 1 || isReordering}
+                        className="habit-menu-item"
+                      >
+                        Move down
+                      </button>
+                    </div>
+                  )}
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleArchive(userHabit.habitId);
+                    }}
+                    disabled={isArchiving}
+                    className="habit-archive-button"
+                  >
+                    <Archive aria-hidden="true" size={16} />
+
+                    <span className="habit-archive-text">
+                      {isArchiving ? "Archiving..." : "Archive"}
+                    </span>
+                  </Button>
+                </div>
+              </TiltCard>
             </li>
           );
         })}

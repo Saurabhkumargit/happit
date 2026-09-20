@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, CheckCircle2 } from "lucide-react";
+import {
+  Activity,
+  BookOpen,
+  Brain,
+  Check,
+  Circle,
+  Clock3,
+  Dumbbell,
+  Droplets,
+  Moon,
+  Sparkles,
+} from "lucide-react";
 
 import {
   adoptHabit,
   getCatalogHabits,
   type CatalogHabit,
 } from "../../services/habitApi";
-
-import PageHeader from "../ui/PageHeader";
-import Button from "../ui/Button";
-import Card from "../ui/Card";
-import Badge from "../ui/Badge";
-import LoadingSpinner from "../ui/LoadingSpinner";
-import ErrorState from "../ui/ErrorState";
-import EmptyState from "../ui/EmptyState";
 
 import "./HabitCatalog.css";
 
@@ -35,19 +37,76 @@ function formatTarget(habit: CatalogHabit) {
   return `${habit.targetValue} ${habit.targetUnit}`;
 }
 
+function getHabitIcon(habit: CatalogHabit) {
+  const key = habit.key.toLowerCase();
+  const name = habit.name.toLowerCase();
+
+  if (
+    key.includes("exercise") ||
+    key.includes("workout") ||
+    name.includes("exercise") ||
+    name.includes("workout")
+  ) {
+    return <Dumbbell size={25} strokeWidth={1.8} />;
+  }
+
+  if (
+    key.includes("read") ||
+    name.includes("read")
+  ) {
+    return <BookOpen size={25} strokeWidth={1.8} />;
+  }
+
+  if (
+    key.includes("water") ||
+    name.includes("water")
+  ) {
+    return <Droplets size={25} strokeWidth={1.8} />;
+  }
+
+  if (
+    key.includes("sleep") ||
+    name.includes("sleep")
+  ) {
+    return <Moon size={25} strokeWidth={1.8} />;
+  }
+
+  if (
+    key.includes("meditat") ||
+    name.includes("meditat")
+  ) {
+    return <Brain size={25} strokeWidth={1.8} />;
+  }
+
+  if (
+    key.includes("activity") ||
+    name.includes("activity")
+  ) {
+    return <Activity size={25} strokeWidth={1.8} />;
+  }
+
+  return <Sparkles size={25} strokeWidth={1.8} />;
+}
+
 function HabitCatalog() {
-  const navigate = useNavigate();
   const [habits, setHabits] = useState<CatalogHabit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [adoptingHabitId, setAdoptingHabitId] = useState<string | null>(null);
+  const [adoptingHabitId, setAdoptingHabitId] = useState<string | null>(
+    null,
+  );
+  const [addedHabitIds, setAddedHabitIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [error, setError] = useState<string | null>(null);
-  const [successHabitId, setSuccessHabitId] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadCatalog() {
       try {
         setError(null);
+
         const result = await getCatalogHabits();
+
         setHabits(result);
       } catch (error) {
         setError(
@@ -60,26 +119,33 @@ function HabitCatalog() {
       }
     }
 
-    loadCatalog();
+    void loadCatalog();
   }, []);
 
   async function handleAdopt(habit: CatalogHabit) {
+    if (addedHabitIds.has(habit.id)) {
+      return;
+    }
+
     try {
       setError(null);
-      setSuccessHabitId(null);
+      setSuccess(null);
       setAdoptingHabitId(habit.id);
 
       await adoptHabit(habit.id);
 
-      setSuccessHabitId(habit.id);
+      setAddedHabitIds((current) => {
+        const next = new Set(current);
+        next.add(habit.id);
+        return next;
+      });
 
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessHabitId(null);
-      }, 3000);
+      setSuccess(`${habit.name} added to your habits.`);
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : "Unable to add habit",
+        error instanceof Error
+          ? error.message
+          : "Unable to add habit",
       );
     } finally {
       setAdoptingHabitId(null);
@@ -88,14 +154,14 @@ function HabitCatalog() {
 
   if (isLoading) {
     return (
-      <section className="habit-catalog-page">
-        <PageHeader
-          eyebrow="Catalog"
-          title="Choose your habits"
-          description="Happit provides a curated set of habits designed to help you build a better routine."
-        />
-        <div className="catalog-loading">
-          <LoadingSpinner size="lg" />
+      <section className="habit-catalog">
+        <div
+          className="habit-catalog-loading"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="habit-catalog-spinner" />
+          <span>Loading habit catalog...</span>
         </div>
       </section>
     );
@@ -103,103 +169,199 @@ function HabitCatalog() {
 
   if (error && habits.length === 0) {
     return (
-      <section className="habit-catalog-page">
-        <PageHeader eyebrow="Catalog" title="Habit catalog" />
-        <ErrorState message={error} />
+      <section className="habit-catalog">
+        <div className="habit-catalog-header">
+          <div>
+            <span className="habit-catalog-eyebrow">
+              HABIT CATALOG
+            </span>
+
+            <h1>Build a better you</h1>
+
+            <p>
+              Explore predefined habits designed to help you
+              build consistency.
+            </p>
+          </div>
+        </div>
+
+        <div className="habit-catalog-state" role="alert">
+          <Circle size={20} />
+          <span>{error}</span>
+        </div>
       </section>
     );
   }
 
   if (habits.length === 0) {
     return (
-      <section className="habit-catalog-page">
-        <PageHeader eyebrow="Catalog" title="Habit catalog" />
-        <EmptyState
-          title="No habits available"
-          description="The habit catalog is currently empty."
-          action={
-            <Button onClick={() => navigate("/app/habits")}>
-              Back to habits
-            </Button>
-          }
-        />
+      <section className="habit-catalog">
+        <div className="habit-catalog-header">
+          <div>
+            <span className="habit-catalog-eyebrow">
+              HABIT CATALOG
+            </span>
+
+            <h1>Build a better you</h1>
+
+            <p>
+              Explore predefined habits designed to help you
+              build consistency.
+            </p>
+          </div>
+        </div>
+
+        <div className="habit-catalog-state">
+          <Sparkles size={22} />
+          <div>
+            <strong>The habit catalog is currently empty.</strong>
+            <p>
+              New predefined habits will appear here when they
+              become available.
+            </p>
+          </div>
+        </div>
       </section>
     );
   }
 
   return (
-    <section className="habit-catalog-page">
-      <PageHeader
-        eyebrow="Catalog"
-        title="Choose your habits"
-        description="Happit provides a curated set of habits designed to help you build a better routine."
-      />
+    <section className="habit-catalog">
+      <header className="habit-catalog-header">
+        <div className="habit-catalog-heading">
+          <span className="habit-catalog-eyebrow">
+            HABIT CATALOG
+          </span>
+
+          <h1>Build a better you</h1>
+
+          <p>
+            Choose from predefined habits and build a routine
+            that lasts.
+          </p>
+        </div>
+
+        <div className="habit-catalog-count">
+          <span>{habits.length}</span>
+          <small>
+            {habits.length === 1 ? "habit available" : "habits available"}
+          </small>
+        </div>
+      </header>
 
       {error && (
-        <div className="catalog-alert">
-          <ErrorState message={error} />
+        <div className="habit-catalog-message error" role="alert">
+          {error}
         </div>
       )}
 
-      <ul className="catalog-list">
+      {success && (
+        <div className="habit-catalog-message success" role="status">
+          <Check size={16} />
+          <span>{success}</span>
+        </div>
+      )}
+
+      <div className="habit-catalog-grid">
         {habits.map((habit) => {
-          const isAdopting = adoptingHabitId === habit.id;
-          const isAdopted = successHabitId === habit.id;
+          const isAdding = adoptingHabitId === habit.id;
+          const isAdded = addedHabitIds.has(habit.id);
 
           return (
-            <li key={habit.id}>
-              <Card className="catalog-card">
-                <div className="catalog-card-header">
-                  <h3 className="catalog-card-title">{habit.name}</h3>
-                  {habit.status === "UNAVAILABLE" && (
-                    <Badge variant="default">Unavailable</Badge>
+            <article
+              key={habit.id}
+              className={`habit-catalog-card ${
+                isAdded ? "is-added" : ""
+              }`}
+            >
+              <div className="habit-catalog-card-glow" />
+
+              <div className="habit-catalog-card-content">
+                <div className="habit-catalog-card-top">
+                  <div className="habit-catalog-icon">
+                    {getHabitIcon(habit)}
+                  </div>
+
+                  <div className="habit-catalog-card-badge">
+                    <Sparkles size={12} />
+                    Curated
+                  </div>
+                </div>
+
+                <div className="habit-catalog-card-title">
+                  <h2>{habit.name}</h2>
+
+                  {habit.description && (
+                    <p>{habit.description}</p>
                   )}
                 </div>
 
-                {habit.description && (
-                  <p className="catalog-card-description">
-                    {habit.description}
-                  </p>
-                )}
-
-                <div className="catalog-card-meta">
-                  <div className="catalog-meta-item">
-                    <span className="catalog-meta-label">Schedule</span>
-                    <span className="catalog-meta-value">
-                      {formatSchedule(habit)}
+                <div className="habit-catalog-card-meta">
+                  <div className="habit-catalog-meta-item">
+                    <span className="habit-catalog-meta-label">
+                      TARGET
                     </span>
-                  </div>
 
-                  <div className="catalog-meta-item">
-                    <span className="catalog-meta-label">Target</span>
-                    <span className="catalog-meta-value catalog-meta-target">
+                    <strong>
                       {formatTarget(habit)}
+                    </strong>
+                  </div>
+
+                  <div className="habit-catalog-meta-divider" />
+
+                  <div className="habit-catalog-meta-item">
+                    <span className="habit-catalog-meta-label">
+                      SCHEDULE
                     </span>
+
+                    <strong>
+                      {formatSchedule(habit)}
+                    </strong>
                   </div>
                 </div>
 
-                <div className="catalog-card-actions">
-                  {isAdopted ? (
-                    <Button variant="secondary" disabled>
-                      <CheckCircle2 size={16} aria-hidden="true" />
-                      Added to your habits
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="primary"
-                      onClick={() => handleAdopt(habit)}
-                      disabled={isAdopting || habit.status === "UNAVAILABLE"}
-                    >
-                      <Plus size={16} aria-hidden="true" />
-                      {isAdopting ? "Adding..." : "Add to my habits"}
-                    </Button>
-                  )}
+                <div className="habit-catalog-card-footer">
+                  <div className="habit-catalog-schedule">
+                    <Clock3 size={15} />
+                    <span>{formatSchedule(habit)}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={`habit-catalog-add-button ${
+                      isAdded ? "added" : ""
+                    }`}
+                    onClick={() => void handleAdopt(habit)}
+                    disabled={isAdding || isAdded}
+                    aria-label={
+                      isAdded
+                        ? "Added to your habits"
+                        : "Add to my habits"
+                    }
+                  >
+                    {isAdded ? (
+                      <>
+                        <Check size={17} />
+                        Added to your habits
+                      </>
+                    ) : isAdding ? (
+                      <>
+                        <span className="habit-catalog-button-spinner" />
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <span className="habit-catalog-plus">+</span>
+                        Add to my habits
+                      </>
+                    )}
+                  </button>
                 </div>
-              </Card>
-            </li>
+              </div>
+            </article>
           );
         })}
-      </ul>
+      </div>
     </section>
   );
 }

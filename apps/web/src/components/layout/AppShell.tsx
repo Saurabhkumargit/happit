@@ -1,13 +1,18 @@
+import { useState, type ReactNode } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Activity,
   Archive,
-  ChartNoAxesCombined,
   BookOpen,
+  ChartNoAxesCombined,
   ListChecks,
   LogOut,
+  Menu,
   Trash2,
+  X,
 } from "lucide-react";
+
+import "./AppShell.css";
 
 interface AppShellProps {
   userEmail: string;
@@ -16,6 +21,36 @@ interface AppShellProps {
   logoutError: string | null;
   deleteError: string | null;
   isDeleting: boolean;
+}
+
+interface SidebarLinkProps {
+  to: string;
+  icon: ReactNode;
+  label: string;
+  end?: boolean;
+  onClick?: () => void;
+}
+
+function SidebarLink({
+  to,
+  icon,
+  label,
+  end = false,
+  onClick,
+}: SidebarLinkProps) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      onClick={onClick}
+      className={({ isActive }) =>
+        isActive ? "app-sidebar-link active" : "app-sidebar-link"
+      }
+    >
+      <span className="app-sidebar-icon">{icon}</span>
+      <span className="app-sidebar-label">{label}</span>
+    </NavLink>
+  );
 }
 
 function AppShell({
@@ -27,6 +62,9 @@ function AppShell({
   isDeleting,
 }: AppShellProps) {
   const navigate = useNavigate();
+
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   function handleDeleteAccount() {
     const confirmed = window.confirm(
@@ -40,137 +78,290 @@ function AppShell({
     void onDeleteAccount();
   }
 
+  function closeMobileSidebar() {
+    setMobileOpen(false);
+  }
+
   return (
     <div className="app-shell">
-      <aside className="app-sidebar">
-        <div className="app-brand">
+      {/* Desktop Sidebar */}
+      <aside
+        className={`app-sidebar ${sidebarExpanded ? "expanded" : "collapsed"}`}
+        onMouseEnter={() => setSidebarExpanded(true)}
+        onMouseLeave={() => setSidebarExpanded(false)}
+      >
+        <div className="app-sidebar-inner">
+          {/* Brand */}
+          <div className="app-brand">
+            <button
+              type="button"
+              className="app-brand-button"
+              onClick={() => navigate("/app/habits")}
+              aria-label="Go to habits"
+            >
+              <img
+                src="/happit%20logo.png"
+                alt="Happit"
+                className="app-brand-mark"
+              />
+
+              <span className="app-brand-name">Happit</span>
+            </button>
+          </div>
+
+          {/* Main navigation */}
+          <nav aria-label="Primary navigation" className="app-sidebar-nav">
+            <div className="app-sidebar-section">
+              <SidebarLink
+                to="/app/habits"
+                end
+                icon={<ListChecks size={18} />}
+                label="Habits"
+              />
+
+              <div className="app-sidebar-subnav">
+                <SidebarLink
+                  to="/app/habits/catalog"
+                  icon={<BookOpen size={16} />}
+                  label="Habit catalog"
+                />
+
+                <SidebarLink
+                  to="/app/habits/archived"
+                  icon={<Archive size={16} />}
+                  label="Archived"
+                />
+              </div>
+            </div>
+
+            <SidebarLink
+              to="/app/activities"
+              icon={<Activity size={18} />}
+              label="Activity"
+            />
+
+            <SidebarLink
+              to="/app/progress"
+              icon={<ChartNoAxesCombined size={18} />}
+              label="Progress"
+            />
+          </nav>
+
+          {/* Bottom section */}
+          <div className="app-sidebar-bottom">
+            <div className="app-sidebar-account">
+              <div className="app-avatar">
+                {userEmail.charAt(0).toUpperCase()}
+              </div>
+
+              <div className="app-account-info">
+                <span className="app-account-label">Signed in as</span>
+                <span className="app-account-email">{userEmail}</span>
+              </div>
+            </div>
+
+            {logoutError && (
+              <p className="app-error" role="alert">
+                {logoutError}
+              </p>
+            )}
+
+            <button
+              type="button"
+              className="app-sidebar-action"
+              onClick={() => void onLogout()}
+            >
+              <LogOut size={17} aria-hidden="true" />
+              <span>Log out</span>
+            </button>
+
+            {deleteError && (
+              <p className="app-error" role="alert">
+                {deleteError}
+              </p>
+            )}
+
+            <button
+              type="button"
+              className="app-sidebar-action danger"
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+            >
+              <Trash2 size={17} aria-hidden="true" />
+              <span>
+                {isDeleting ? "Deleting account..." : "Delete account"}
+              </span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile top bar */}
+      <header className="app-mobile-header">
+        <button
+          type="button"
+          className="app-mobile-menu-button"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open navigation"
+          aria-expanded={mobileOpen}
+        >
+          <Menu size={21} />
+        </button>
+
+        <button
+          type="button"
+          className="app-mobile-brand"
+          onClick={() => navigate("/app/habits")}
+        >
+          <img
+            src="/happit%20logo.png"
+            alt="Happit"
+            className="app-brand-mark"
+          />
+          <span>Happit</span>
+        </button>
+
+        <div className="app-mobile-avatar">
+          {userEmail.charAt(0).toUpperCase()}
+        </div>
+      </header>
+
+      {/* Mobile sidebar */}
+      {mobileOpen && (
+        <div
+          className="app-mobile-overlay"
+          onClick={closeMobileSidebar}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`app-mobile-sidebar ${mobileOpen ? "open" : ""}`}
+        aria-label="Mobile navigation"
+      >
+        <div className="app-mobile-sidebar-header">
           <button
             type="button"
-            className="app-brand-button"
-            onClick={() => navigate("/app/habits")}
+            className="app-mobile-brand"
+            onClick={() => {
+              navigate("/app/habits");
+              closeMobileSidebar();
+            }}
           >
-            Happit
+            <img
+              src="/happit%20logo.png"
+              alt="Happit"
+              className="app-brand-mark"
+            />
+            <span>Happit</span>
+          </button>
+
+          <button
+            type="button"
+            className="app-mobile-close"
+            onClick={closeMobileSidebar}
+            aria-label="Close navigation"
+          >
+            <X size={20} />
           </button>
         </div>
 
-        <nav aria-label="Primary navigation" className="app-nav">
-          <div className="app-nav-section">
-            <NavLink
-              to="/app/habits"
-              className={({ isActive }) =>
-                isActive ? "app-nav-link active" : "app-nav-link"
-              }
-            >
-              <ListChecks aria-hidden="true" size={18} />
-              <span>Habits</span>
-            </NavLink>
+        <nav className="app-mobile-nav">
+          <SidebarLink
+            to="/app/habits"
+            end
+            icon={<ListChecks size={18} />}
+            label="Habits"
+            onClick={closeMobileSidebar}
+          />
 
-            <div className="app-nav-subsection">
-              <NavLink
-                to="/app/habits/catalog"
-                className={({ isActive }) =>
-                  isActive ? "app-nav-sublink active" : "app-nav-sublink"
-                }
-              >
-                <BookOpen aria-hidden="true" size={16} />
-                <span>Habit catalog</span>
-              </NavLink>
+          <div className="app-mobile-subnav">
+            <SidebarLink
+              to="/app/habits/catalog"
+              icon={<BookOpen size={16} />}
+              label="Habit catalog"
+              onClick={closeMobileSidebar}
+            />
 
-              <NavLink
-                to="/app/habits/archived"
-                className={({ isActive }) =>
-                  isActive ? "app-nav-sublink active" : "app-nav-sublink"
-                }
-              >
-                <Archive aria-hidden="true" size={16} />
-                <span>Archived</span>
-              </NavLink>
+            <SidebarLink
+              to="/app/habits/archived"
+              icon={<Archive size={16} />}
+              label="Archived"
+              onClick={closeMobileSidebar}
+            />
+          </div>
+
+          <SidebarLink
+            to="/app/activities"
+            icon={<Activity size={18} />}
+            label="Activity"
+            onClick={closeMobileSidebar}
+          />
+
+          <SidebarLink
+            to="/app/progress"
+            icon={<ChartNoAxesCombined size={18} />}
+            label="Progress"
+            onClick={closeMobileSidebar}
+          />
+        </nav>
+
+        <div className="app-mobile-sidebar-bottom">
+          <div className="app-sidebar-account">
+            <div className="app-avatar">
+              {userEmail.charAt(0).toUpperCase()}
+            </div>
+
+            <div className="app-account-info">
+              <span className="app-account-label">Signed in as</span>
+              <span className="app-account-email">{userEmail}</span>
             </div>
           </div>
 
-          <NavLink
-            to="/app/activities"
-            className={({ isActive }) =>
-              isActive ? "app-nav-link active" : "app-nav-link"
-            }
-          >
-            <Activity aria-hidden="true" size={18} />
-            <span>Activity</span>
-          </NavLink>
-
-          <NavLink
-            to="/app/progress"
-            className={({ isActive }) =>
-              isActive ? "app-nav-link active" : "app-nav-link"
-            }
-          >
-            <ChartNoAxesCombined aria-hidden="true" size={18} />
-            <span>Progress</span>
-          </NavLink>
-        </nav>
-
-        <div className="app-sidebar-footer">
-          <p className="app-user-email">{userEmail}</p>
-
-          {logoutError && (
-            <p className="app-error" role="alert">
-              {logoutError}
-            </p>
-          )}
-
           <button
             type="button"
-            className="app-secondary-button"
-            onClick={() => void onLogout()}
+            className="app-sidebar-action"
+            onClick={() => {
+              closeMobileSidebar();
+              void onLogout();
+            }}
           >
-            <LogOut aria-hidden="true" size={16} />
+            <LogOut size={17} aria-hidden="true" />
             <span>Log out</span>
           </button>
 
-          {deleteError && (
-            <p className="app-error" role="alert">
-              {deleteError}
-            </p>
-          )}
-
           <button
             type="button"
-            className="app-danger-button"
-            onClick={handleDeleteAccount}
+            className="app-sidebar-action danger"
+            onClick={() => {
+              closeMobileSidebar();
+              handleDeleteAccount();
+            }}
             disabled={isDeleting}
           >
-            <Trash2 aria-hidden="true" size={16} />
+            <Trash2 size={17} aria-hidden="true" />
             <span>{isDeleting ? "Deleting account..." : "Delete account"}</span>
           </button>
         </div>
       </aside>
 
+      {/* Main application area */}
       <div className="app-main">
-        <header className="app-mobile-header">
-          <button
-            type="button"
-            className="app-brand-button"
-            onClick={() => navigate("/app/habits")}
-          >
-            Happit
-          </button>
-
-          <span className="app-mobile-user">{userEmail}</span>
-        </header>
-
         <main className="app-content">
           <Outlet />
         </main>
       </div>
 
+      {/* Mobile bottom navigation */}
       <nav aria-label="Mobile navigation" className="app-bottom-nav">
         <NavLink
           to="/app/habits"
+          end
           className={({ isActive }) =>
             isActive ? "app-bottom-link active" : "app-bottom-link"
           }
         >
-          <ListChecks aria-hidden="true" size={20} />
+          <ListChecks size={20} aria-hidden="true" />
           <span>Habits</span>
         </NavLink>
 
@@ -180,7 +371,7 @@ function AppShell({
             isActive ? "app-bottom-link active" : "app-bottom-link"
           }
         >
-          <Activity aria-hidden="true" size={20} />
+          <Activity size={20} aria-hidden="true" />
           <span>Activity</span>
         </NavLink>
 
@@ -190,7 +381,7 @@ function AppShell({
             isActive ? "app-bottom-link active" : "app-bottom-link"
           }
         >
-          <ChartNoAxesCombined aria-hidden="true" size={20} />
+          <ChartNoAxesCombined size={20} aria-hidden="true" />
           <span>Progress</span>
         </NavLink>
       </nav>
