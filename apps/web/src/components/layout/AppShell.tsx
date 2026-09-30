@@ -226,7 +226,7 @@ function AppShell({
         </div>
       </header>
 
-      {/* Mobile sidebar */}
+      {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div
           className="app-mobile-overlay"
@@ -235,115 +235,118 @@ function AppShell({
         />
       )}
 
-      <aside
-        className={`app-mobile-sidebar ${mobileOpen ? "open" : ""}`}
-        aria-label="Mobile navigation"
-      >
-        <div className="app-mobile-sidebar-header">
-          <button
-            type="button"
-            className="app-mobile-brand"
-            onClick={() => {
-              navigate("/app/habits");
-              closeMobileSidebar();
-            }}
-          >
-            <img
-              src="/happit%20logo.png"
-              alt="Happit"
-              className="app-brand-mark"
-            />
-            <span>Happit</span>
-          </button>
+      {/* Mobile sidebar — only mounted when open to avoid duplicate nav links in the DOM */}
+      {mobileOpen && (
+        <aside
+          className="app-mobile-sidebar open"
+          aria-label="Mobile navigation"
+        >
+          <div className="app-mobile-sidebar-header">
+            <button
+              type="button"
+              className="app-mobile-brand"
+              onClick={() => {
+                navigate("/app/habits");
+                closeMobileSidebar();
+              }}
+            >
+              <img
+                src="/happit%20logo.png"
+                alt="Happit"
+                className="app-brand-mark"
+              />
+              <span>Happit</span>
+            </button>
 
-          <button
-            type="button"
-            className="app-mobile-close"
-            onClick={closeMobileSidebar}
-            aria-label="Close navigation"
-          >
-            <X size={20} />
-          </button>
-        </div>
+            <button
+              type="button"
+              className="app-mobile-close"
+              onClick={closeMobileSidebar}
+              aria-label="Close navigation"
+            >
+              <X size={20} />
+            </button>
+          </div>
 
-        <nav className="app-mobile-nav">
-          <SidebarLink
-            to="/app/habits"
-            end
-            icon={<ListChecks size={18} />}
-            label="Habits"
-            onClick={closeMobileSidebar}
-          />
-
-          <div className="app-mobile-subnav">
+          <nav className="app-mobile-nav">
             <SidebarLink
-              to="/app/habits/catalog"
-              icon={<BookOpen size={16} />}
-              label="Habit catalog"
+              to="/app/habits"
+              end
+              icon={<ListChecks size={18} />}
+              label="Habits"
+              onClick={closeMobileSidebar}
+            />
+
+            <div className="app-mobile-subnav">
+              <SidebarLink
+                to="/app/habits/catalog"
+                icon={<BookOpen size={16} />}
+                label="Habit catalog"
+                onClick={closeMobileSidebar}
+              />
+
+              <SidebarLink
+                to="/app/habits/archived"
+                icon={<Archive size={16} />}
+                label="Archived"
+                onClick={closeMobileSidebar}
+              />
+            </div>
+
+            <SidebarLink
+              to="/app/activities"
+              icon={<Activity size={18} />}
+              label="Activity"
               onClick={closeMobileSidebar}
             />
 
             <SidebarLink
-              to="/app/habits/archived"
-              icon={<Archive size={16} />}
-              label="Archived"
+              to="/app/progress"
+              icon={<ChartNoAxesCombined size={18} />}
+              label="Progress"
               onClick={closeMobileSidebar}
             />
-          </div>
+          </nav>
 
-          <SidebarLink
-            to="/app/activities"
-            icon={<Activity size={18} />}
-            label="Activity"
-            onClick={closeMobileSidebar}
-          />
+          <div className="app-mobile-sidebar-bottom">
+            <div className="app-sidebar-account">
+              <div className="app-avatar">
+                {userEmail.charAt(0).toUpperCase()}
+              </div>
 
-          <SidebarLink
-            to="/app/progress"
-            icon={<ChartNoAxesCombined size={18} />}
-            label="Progress"
-            onClick={closeMobileSidebar}
-          />
-        </nav>
-
-        <div className="app-mobile-sidebar-bottom">
-          <div className="app-sidebar-account">
-            <div className="app-avatar">
-              {userEmail.charAt(0).toUpperCase()}
+              <div className="app-account-info">
+                <span className="app-account-label">Signed in as</span>
+                <span className="app-account-email">{userEmail}</span>
+              </div>
             </div>
 
-            <div className="app-account-info">
-              <span className="app-account-label">Signed in as</span>
-              <span className="app-account-email">{userEmail}</span>
-            </div>
+            <button
+              type="button"
+              className="app-sidebar-action"
+              onClick={() => {
+                closeMobileSidebar();
+                void onLogout();
+              }}
+            >
+              <LogOut size={17} aria-hidden="true" />
+              <span>Log out</span>
+            </button>
+
+            <button
+              type="button"
+              className="app-sidebar-action danger"
+              onClick={() => {
+                closeMobileSidebar();
+                handleDeleteAccount();
+              }}
+              disabled={isDeleting}
+            >
+              <Trash2 size={17} aria-hidden="true" />
+              <span>{isDeleting ? "Deleting account..." : "Delete account"}</span>
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="app-sidebar-action"
-            onClick={() => {
-              closeMobileSidebar();
-              void onLogout();
-            }}
-          >
-            <LogOut size={17} aria-hidden="true" />
-            <span>Log out</span>
-          </button>
-
-          <button
-            type="button"
-            className="app-sidebar-action danger"
-            onClick={() => {
-              closeMobileSidebar();
-              handleDeleteAccount();
-            }}
-            disabled={isDeleting}
-          >
-            <Trash2 size={17} aria-hidden="true" />
-            <span>{isDeleting ? "Deleting account..." : "Delete account"}</span>
-          </button>
-        </div>
-      </aside>
+        </aside>
+      )}
 
       {/* Main application area */}
       <div className="app-main">

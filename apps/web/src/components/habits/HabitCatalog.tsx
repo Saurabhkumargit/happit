@@ -5,7 +5,6 @@ import {
   Brain,
   Check,
   Circle,
-  Clock3,
   Dumbbell,
   Droplets,
   Moon,
@@ -176,7 +175,7 @@ function HabitCatalog() {
               HABIT CATALOG
             </span>
 
-            <h1>Build a better you</h1>
+            <h1>Habit catalog</h1>
 
             <p>
               Explore predefined habits designed to help you
@@ -202,7 +201,7 @@ function HabitCatalog() {
               HABIT CATALOG
             </span>
 
-            <h1>Build a better you</h1>
+            <h1>Habit catalog</h1>
 
             <p>
               Explore predefined habits designed to help you
@@ -233,7 +232,7 @@ function HabitCatalog() {
             HABIT CATALOG
           </span>
 
-          <h1>Build a better you</h1>
+          <h1>Habit catalog</h1>
 
           <p>
             Choose from predefined habits and build a routine
@@ -321,11 +320,6 @@ function HabitCatalog() {
                 </div>
 
                 <div className="habit-catalog-card-footer">
-                  <div className="habit-catalog-schedule">
-                    <Clock3 size={15} />
-                    <span>{formatSchedule(habit)}</span>
-                  </div>
-
                   <button
                     type="button"
                     className={`habit-catalog-add-button ${

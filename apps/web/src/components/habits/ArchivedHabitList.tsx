@@ -54,15 +54,15 @@ function ArchivedHabitList() {
     loadHabits();
   }, []);
 
-  async function handleRestore(habitId: string) {
+  async function handleRestore(userHabitId: string) {
     try {
       setError(null);
-      setRestoringHabitId(habitId);
+      setRestoringHabitId(userHabitId);
 
-      await restoreHabit(habitId);
+      await restoreHabit(userHabitId);
 
       setHabits((current) =>
-        current.filter((habit) => habit.habitId !== habitId),
+        current.filter((habit) => habit.id !== userHabitId),
       );
     } catch (error) {
       setError(
@@ -143,10 +143,10 @@ function ArchivedHabitList() {
 
             <button
               type="button"
-              onClick={() => handleRestore(userHabit.habitId)}
-              disabled={restoringHabitId === userHabit.habitId}
+              onClick={() => handleRestore(userHabit.id)}
+              disabled={restoringHabitId === userHabit.id}
             >
-              {restoringHabitId === userHabit.habitId
+              {restoringHabitId === userHabit.id
                 ? "Restoring..."
                 : "Restore"}
             </button>
