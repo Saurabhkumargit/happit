@@ -9,10 +9,10 @@ export type OccurrenceState =
 export interface Occurrence {
   date: string;
   state: OccurrenceState;
-  expected: boolean;
   actualValue?: number;
   targetValue: number;
   targetUnit: string;
+  completionPercentage?: number;
 }
 
 export interface Consistency {

@@ -7,6 +7,7 @@ import {
   Routes,
   useNavigate,
   useParams,
+  useSearchParams,
 } from "react-router-dom";
 import {
   deleteAccount,
@@ -27,6 +28,7 @@ import TimerActivityForm from "./components/activities/TimerActivityForm";
 import ActivityDetail from "./components/activities/ActivityDetail";
 import AppShell from "./components/layout/AppShell";
 import Progress from "./components/progress/Progress";
+import Home from "./components/home/Home";
 
 type AuthMode = "login" | "register";
 
@@ -58,6 +60,36 @@ function ActivityDetailRoute() {
     <ActivityDetail
       activityId={activityId}
       onDeleted={() => navigate("/app/activities")}
+    />
+  );
+}
+
+function TimerActivityRoute() {
+  const [searchParams] = useSearchParams();
+
+  const navigate = useNavigate();
+
+  const habitId = searchParams.get("habitId") ?? undefined;
+
+  return (
+    <TimerActivityForm
+      initialHabitId={habitId}
+      onSaved={() => navigate("/app/activities")}
+    />
+  );
+}
+
+function ManualActivityRoute() {
+  const [searchParams] = useSearchParams();
+
+  const navigate = useNavigate();
+
+  const habitId = searchParams.get("habitId") ?? undefined;
+
+  return (
+    <ManualActivityForm
+      initialHabitId={habitId}
+      onSaved={() => navigate("/app/activities")}
     />
   );
 }
@@ -94,36 +126,24 @@ function AuthenticatedApp({
           />
         }
       >
-        <Route
-          index
-          element={<Navigate to="/app/habits" replace />}
-        />
+        <Route index element={<Navigate to="/app" replace />} />
+
+        <Route path="app" element={<Home />} />
 
         <Route
           path="app/habits"
           element={
             <HabitList
-              onSelectHabit={(habitId) =>
-                navigate(`/app/habits/${habitId}`)
-              }
+              onSelectHabit={(habitId) => navigate(`/app/habits/${habitId}`)}
             />
           }
         />
 
-        <Route
-          path="app/habits/catalog"
-          element={<HabitCatalog />}
-        />
+        <Route path="app/habits/catalog" element={<HabitCatalog />} />
 
-        <Route
-          path="app/habits/archived"
-          element={<ArchivedHabitList />}
-        />
+        <Route path="app/habits/archived" element={<ArchivedHabitList />} />
 
-        <Route
-          path="app/habits/:habitId"
-          element={<HabitDetailRoute />}
-        />
+        <Route path="app/habits/:habitId" element={<HabitDetailRoute />} />
 
         <Route
           path="app/activities"
@@ -139,18 +159,14 @@ function AuthenticatedApp({
         <Route
           path="app/activities/timer"
           element={
-            <TimerActivityForm
-              onSaved={() => navigate("/app/activities")}
-            />
+            <TimerActivityRoute />
           }
         />
 
         <Route
           path="app/activities/new"
           element={
-            <ManualActivityForm
-              onSaved={() => navigate("/app/activities")}
-            />
+            <ManualActivityRoute />
           }
         />
 
@@ -161,10 +177,7 @@ function AuthenticatedApp({
 
         <Route path="app/progress" element={<Progress />} />
 
-        <Route
-          path="*"
-          element={<Navigate to="/app/habits" replace />}
-        />
+        <Route path="*" element={<Navigate to="/app" replace />} />
       </Route>
     </Routes>
   );

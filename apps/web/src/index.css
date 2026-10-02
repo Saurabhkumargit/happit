@@ -1,42 +1,60 @@
 :root {
-  --color-bg: #0c0a0f;
-  --color-surface: #15121a;
-  --color-surface-elevated: #1b1721;
-  --color-surface-secondary: #221d2a;
+  color-scheme: dark;
 
-  --color-border: #2a2434;
-  --color-border-strong: #383042;
+  /* ─────────────────────────────────────────
+     Colors
+  ───────────────────────────────────────── */
+
+  --color-bg: #0b0a0d;
+
+  --color-surface: #121116;
+  --color-surface-elevated: #18171d;
+  --color-surface-subtle: #1e1c24;
+
+  --color-border: #28252f;
+  --color-border-strong: #36323f;
 
   --color-primary: #a78bfa;
-  --color-primary-hover: #c4b5fd;
+  --color-primary-hover: #b8a3ff;
   --color-primary-soft: rgb(167 139 250 / 10%);
-  --color-primary-border: rgb(167 139 250 / 40%);
+  --color-primary-border: rgb(167 139 250 / 28%);
 
-  --color-text: #f1f1f3;
-  --color-text-secondary: #a7a3af;
-  --color-text-muted: #76707f;
+  --color-text: #f5f3f7;
+  --color-text-secondary: #a8a4ae;
+  --color-text-muted: #706b78;
 
-  --color-success: #5ee6a8;
-  --color-success-soft: rgb(94 230 168 / 10%);
+  --color-success: #6ee7b7;
+  --color-success-soft: rgb(110 231 183 / 10%);
 
-  --color-danger: #ef4444;
-  --color-danger-hover: #f87171;
-  --color-danger-soft: rgb(239 68 68 / 10%);
+  --color-warning: #fbbf24;
+  --color-warning-soft: rgb(251 191 36 / 10%);
 
-  --color-warning: #f59e0b;
-  --color-warning-soft: rgb(245 158 11 / 10%);
+  --color-danger: #f87171;
+  --color-danger-soft: rgb(248 113 113 / 10%);
 
   --color-info: #60a5fa;
   --color-info-soft: rgb(96 165 250 / 10%);
 
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
-  --shadow-md: 0 8px 24px rgb(0 0 0 / 24%);
+  /* ─────────────────────────────────────────
+     Shadows
+  ───────────────────────────────────────── */
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 24%);
+  --shadow-md: 0 10px 30px rgb(0 0 0 / 28%);
+
+  /* ─────────────────────────────────────────
+     Radius
+  ───────────────────────────────────────── */
 
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-full: 999px;
+
+  /* ─────────────────────────────────────────
+     Spacing — 4px system
+  ───────────────────────────────────────── */
 
   --space-1: 4px;
   --space-2: 8px;
@@ -48,6 +66,10 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+
+  /* ─────────────────────────────────────────
+     Typography
+  ───────────────────────────────────────── */
 
   --font-sans:
     Inter,
@@ -73,6 +95,7 @@
   font-size: 16px;
   line-height: 1.5;
   font-weight: 400;
+
   color: var(--color-text);
   background: var(--color-bg);
 
@@ -82,55 +105,205 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ─────────────────────────────────────────
+   Base
+───────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--color-bg);
+}
+
 body {
-  margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  margin: 0;
+
   background: var(--color-bg);
   color: var(--color-text);
 }
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+
+  background: var(--color-primary);
+  color: #100d16;
+
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+a {
+  color: inherit;
+}
+
+p {
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────
+   Typography
+───────────────────────────────────────── */
 
 h1,
 h2,
 h3,
 h4 {
   margin: 0;
+
   color: var(--color-text);
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 h1,
 h2 {
   font-family: var(--font-serif);
   font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 h1 {
-  font-size: clamp(32px, 5vw, 48px);
-  letter-spacing: -0.5px;
+  font-size: clamp(36px, 5vw, 52px);
 }
 
 h2 {
-  font-size: clamp(28px, 4vw, 36px);
-  letter-spacing: -0.3px;
+  font-size: clamp(30px, 4vw, 40px);
 }
 
 h3 {
   font-size: 18px;
+  font-weight: 600;
 }
+
+h4 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────
+   Form controls
+───────────────────────────────────────── */
 
 input,
 select,
 textarea {
   width: 100%;
+
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
-  padding: 0 var(--space-3);
+
   background: var(--color-surface);
   color: var(--color-text);
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+input,
+select {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+}
+
+textarea {
+  min-height: 100px;
+  padding: var(--space-3);
+  resize: vertical;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border-strong);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+
+  background: var(--color-surface);
+
+  border-color: var(--color-primary-border);
+
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
 input::placeholder,
 textarea::placeholder {
   color: var(--color-text-muted);
+}
+
+select {
+  color-scheme: dark;
+}
+
+/* ─────────────────────────────────────────
+   Accessibility
+───────────────────────────────────────── */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgb(167 139 250 / 24%);
+  color: var(--color-text);
+}
+
+/* ─────────────────────────────────────────
+   Reduced motion
+───────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

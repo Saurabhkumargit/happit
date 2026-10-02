@@ -12,6 +12,7 @@ import {
 
 interface ManualActivityFormProps {
   onSaved?: (activity: Activity) => void;
+  initialHabitId?: string;
 }
 
 function formatTarget(habit: UserHabit["habit"]) {
@@ -19,7 +20,10 @@ function formatTarget(habit: UserHabit["habit"]) {
   return `${habit.targetValue}${unit}`;
 }
 
-function ManualActivityForm({ onSaved }: ManualActivityFormProps) {
+function ManualActivityForm({
+  onSaved,
+  initialHabitId,
+}: ManualActivityFormProps) {
   const [habits, setHabits] = useState<UserHabit[]>([]);
   const [selectedHabitId, setSelectedHabitId] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("");
@@ -39,8 +43,12 @@ function ManualActivityForm({ onSaved }: ManualActivityFormProps) {
         setHabits(result);
 
         if (result.length > 0) {
-          setSelectedHabitId(result[0].id);
-        }
+  const initialHabit = initialHabitId
+    ? result.find((habit) => habit.id === initialHabitId)
+    : undefined;
+
+  setSelectedHabitId(initialHabit?.id ?? result[0].id);
+}
       } catch (error) {
         setLoadError(
           error instanceof Error
@@ -53,7 +61,7 @@ function ManualActivityForm({ onSaved }: ManualActivityFormProps) {
     }
 
     loadHabits();
-  }, []);
+  }, [initialHabitId]);
 
   const selectedHabit = habits.find(
     (habit) => habit.id === selectedHabitId,

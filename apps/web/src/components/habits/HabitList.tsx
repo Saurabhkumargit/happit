@@ -10,7 +10,7 @@ import {
   Moon,
   Sparkles,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 import {
   getHabits,
@@ -267,7 +267,15 @@ function HabitList({ onSelectHabit }: HabitListProps) {
   if (isLoading) {
     return (
       <section className="habit-list-page" aria-busy="true">
-        <PageHeader eyebrow="Habits" title="Your habits" />
+        <PageHeader
+          eyebrow="Habits"
+          title="Your habits"
+          actions={
+            <Link to="/app/habits/archived" className="habit-list-archived-link">
+              View archived
+            </Link>
+          }
+        />
         <div className="habit-list-loading">
           <LoadingSpinner size="lg" />
         </div>
@@ -278,7 +286,15 @@ function HabitList({ onSelectHabit }: HabitListProps) {
   if (loadError) {
     return (
       <section className="habit-list-page">
-        <PageHeader eyebrow="Habits" title="Your habits" />
+        <PageHeader
+          eyebrow="Habits"
+          title="Your habits"
+          actions={
+            <Link to="/app/habits/archived" className="habit-list-archived-link">
+              View archived
+            </Link>
+          }
+        />
         <ErrorState message={loadError} />
       </section>
     );
@@ -287,7 +303,15 @@ function HabitList({ onSelectHabit }: HabitListProps) {
   if (habits.length === 0) {
     return (
       <section className="habit-list-page">
-        <PageHeader eyebrow="Habits" title="Your habits" />
+        <PageHeader
+          eyebrow="Habits"
+          title="Your habits"
+          actions={
+            <Link to="/app/habits/archived" className="habit-list-archived-link">
+              View archived
+            </Link>
+          }
+        />
         <EmptyState
           title="No habits yet"
           description="You don't have any active habits. Choose a habit from the catalog to get started."
@@ -303,7 +327,15 @@ function HabitList({ onSelectHabit }: HabitListProps) {
 
   return (
     <section className="habit-list-page">
-      <PageHeader eyebrow="Habits" title="Your habits" />
+      <PageHeader
+        eyebrow="Habits"
+        title="Your habits"
+        actions={
+          <Link to="/app/habits/archived" className="habit-list-archived-link">
+            View archived
+          </Link>
+        }
+      />
 
       <div
         id="reorder-announcer"

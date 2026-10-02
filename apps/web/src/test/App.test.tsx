@@ -17,6 +17,26 @@ vi.mock("../services/habitApi", () => ({
   getHabit: vi.fn(),
   getCatalogHabit: vi.fn(),
 }));
+
+vi.mock("../services/progressApi", () => ({
+  getOverallProgress: vi.fn().mockResolvedValue({
+    range: {
+      from: "2026-10-01",
+      to: "2026-10-01",
+    },
+    consistency: {
+      completed: 0,
+      expected: 0,
+      percentage: 0,
+    },
+    habits: [],
+  }),
+}));
+
+vi.mock("../services/activityApi", () => ({
+  getActivities: vi.fn().mockResolvedValue([]),
+}));
+
 class MockBroadcastChannel {
   static instances: MockBroadcastChannel[] = [];
 
@@ -50,6 +70,7 @@ describe("App authentication", () => {
     vi.mocked(api.getCurrentUser).mockReset();
 
     MockBroadcastChannel.instances = [];
+    window.history.pushState({}, "", "/");
   });
 
   it("shows the login screen when the user is unauthenticated", async () => {
@@ -84,7 +105,9 @@ describe("App authentication", () => {
     const emails = await screen.findAllByText("test@example.com");
     expect(emails.length).toBeGreaterThan(0);
 
-    expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Log out" }),
+    ).toBeInTheDocument();
 
     expect(
       screen.getByRole("button", { name: "Delete account" }),
@@ -137,7 +160,9 @@ describe("App authentication", () => {
     const emails = await screen.findAllByText("test@example.com");
     expect(emails.length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete account" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Delete account" }),
+    );
 
     expect(api.deleteAccount).toHaveBeenCalledTimes(1);
 
@@ -161,11 +186,15 @@ describe("App authentication", () => {
     const emails = await screen.findAllByText("test@example.com");
     expect(emails.length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete account" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Delete account" }),
+    );
 
     expect(api.deleteAccount).not.toHaveBeenCalled();
 
-    expect(screen.getAllByText("test@example.com").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("test@example.com").length,
+    ).toBeGreaterThan(0);
   });
 
   it("returns to the login screen when another tab logs out", async () => {
@@ -192,74 +221,92 @@ describe("App authentication", () => {
   });
 
   it("switches between my habits and the habit catalog", async () => {
-  vi.mocked(api.getCurrentUser).mockResolvedValue({
-    user: {
-      id: "user-123",
-      email: "test@example.com",
-      createdAt: "2026-09-07T00:00:00.000Z",
-    },
+    vi.mocked(api.getCurrentUser).mockResolvedValue({
+      user: {
+        id: "user-123",
+        email: "test@example.com",
+        createdAt: "2026-09-07T00:00:00.000Z",
+      },
+    });
+
+    render(<App />);
+
+    fireEvent.click(
+      await screen.findByRole("link", { name: "Habits" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Your habits" }),
+    ).toBeInTheDocument();
+
+    const browseCatalogBtn = await screen.findByRole("button", {
+      name: "Browse catalog",
+    });
+
+    fireEvent.click(browseCatalogBtn);
+
+    expect(
+      await screen.findByRole("heading", { name: "Habit catalog" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      await screen.findByRole("link", { name: "Habits" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Your habits" }),
+    ).toBeInTheDocument();
   });
 
-  render(<App />);
+  it("switches between my habits, habit catalog, and archived habits", async () => {
+    vi.mocked(api.getCurrentUser).mockResolvedValue({
+      user: {
+        id: "user-123",
+        email: "test@example.com",
+        createdAt: "2026-09-07T00:00:00.000Z",
+      },
+    });
 
-  expect(
-    await screen.findByRole("heading", { name: "Your habits" }),
-  ).toBeInTheDocument();
+    render(<App />);
 
-  fireEvent.click(
-    screen.getByRole("link", { name: "Habit catalog" }),
-  );
+    fireEvent.click(
+      await screen.findByRole("link", { name: "Habits" }),
+    );
 
-  expect(
-    await screen.findByRole("heading", { name: "Habit catalog" }),
-  ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Your habits" }),
+    ).toBeInTheDocument();
 
-  fireEvent.click(
-    screen.getAllByRole("link", { name: "Habits" })[0],
-  );
+    const browseCatalogBtn = await screen.findByRole("button", {
+      name: "Browse catalog",
+    });
 
-  expect(
-    await screen.findByRole("heading", { name: "Your habits" }),
-  ).toBeInTheDocument();
-});
+    fireEvent.click(browseCatalogBtn);
 
-it("switches between my habits, habit catalog, and archived habits", async () => {
-  vi.mocked(api.getCurrentUser).mockResolvedValue({
-    user: {
-      id: "user-123",
-      email: "test@example.com",
-      createdAt: "2026-09-07T00:00:00.000Z",
-    },
+    expect(
+      await screen.findByRole("heading", { name: "Habit catalog" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      await screen.findByRole("link", { name: "Habits" }),
+    );
+
+    const viewArchivedLink = await screen.findByRole("link", {
+      name: "View archived",
+    });
+
+    fireEvent.click(viewArchivedLink);
+
+    expect(
+      await screen.findByRole("heading", { name: "Archived habits" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      await screen.findByRole("link", { name: "Habits" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Your habits" }),
+    ).toBeInTheDocument();
   });
-
-  render(<App />);
-
-  expect(
-    await screen.findByRole("heading", { name: "Your habits" }),
-  ).toBeInTheDocument();
-
-  fireEvent.click(
-    screen.getByRole("link", { name: "Habit catalog" }),
-  );
-
-  expect(
-    await screen.findByRole("heading", { name: "Habit catalog" }),
-  ).toBeInTheDocument();
-
-  fireEvent.click(
-    screen.getByRole("link", { name: "Archived" }),
-  );
-
-  expect(
-    await screen.findByRole("heading", { name: "Archived habits" }),
-  ).toBeInTheDocument();
-
-  fireEvent.click(
-    screen.getAllByRole("link", { name: "Habits" })[0],
-  );
-
-  expect(
-    await screen.findByRole("heading", { name: "Your habits" }),
-  ).toBeInTheDocument();
-});
 });

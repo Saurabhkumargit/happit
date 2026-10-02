@@ -18,6 +18,7 @@ import {
 
 interface TimerActivityFormProps {
   onSaved?: (activity: Activity) => void;
+  initialHabitId?: string;
 }
 
 type TimerState = "IDLE" | "RUNNING" | "PAUSED" | "REVIEW";
@@ -41,7 +42,7 @@ function formatElapsed(seconds: number) {
     .join(":");
 }
 
-function TimerActivityForm({ onSaved }: TimerActivityFormProps) {
+function TimerActivityForm({ onSaved, initialHabitId }: TimerActivityFormProps) {
   const [habits, setHabits] = useState<UserHabit[]>([]);
   const [selectedHabitId, setSelectedHabitId] = useState("");
   const [timerState, setTimerState] = useState<TimerState>("IDLE");
@@ -93,8 +94,12 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
             clearTimerState();
           }
         } else if (result.length > 0) {
-          setSelectedHabitId(result[0].id);
-        }
+  const initialHabit = initialHabitId
+    ? result.find((habit) => habit.id === initialHabitId)
+    : undefined;
+
+  setSelectedHabitId(initialHabit?.id ?? result[0].id);
+}
       } catch (error) {
         setLoadError(
           error instanceof Error
@@ -107,7 +112,7 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
     }
 
     loadHabits();
-  }, []);
+  }, [initialHabitId]);
 
   useEffect(() => {
     if (timerState !== "RUNNING") {
