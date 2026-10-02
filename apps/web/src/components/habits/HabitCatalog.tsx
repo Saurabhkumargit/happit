@@ -14,6 +14,7 @@ import {
 import {
   adoptHabit,
   getCatalogHabits,
+  getHabits,
   type CatalogHabit,
 } from "../../services/habitApi";
 
@@ -104,9 +105,16 @@ function HabitCatalog() {
       try {
         setError(null);
 
-        const result = await getCatalogHabits();
+        const [catalogHabits, userHabits] = await Promise.all([
+          getCatalogHabits(),
+          getHabits(),
+        ]);
 
-        setHabits(result);
+        setHabits(catalogHabits);
+
+        setAddedHabitIds(
+          new Set(userHabits.map((userHabit) => userHabit.habitId)),
+        );
       } catch (error) {
         setError(
           error instanceof Error
@@ -329,14 +337,14 @@ function HabitCatalog() {
                     disabled={isAdding || isAdded}
                     aria-label={
                       isAdded
-                        ? "Added to your habits"
+                        ? "Habit already adopted"
                         : "Add to my habits"
                     }
                   >
                     {isAdded ? (
                       <>
                         <Check size={17} />
-                        Added to your habits
+                        Adopted
                       </>
                     ) : isAdding ? (
                       <>

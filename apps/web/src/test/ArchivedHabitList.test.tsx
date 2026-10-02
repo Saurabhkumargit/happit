@@ -86,7 +86,7 @@ describe("ArchivedHabitList", () => {
     fireEvent.click(restoreButton);
 
     await waitFor(() => {
-      expect(mockedRestoreHabit).toHaveBeenCalledWith("user-habit-1");
+      expect(mockedRestoreHabit).toHaveBeenCalledWith("habit-1");
     });
 
     await waitFor(() => {
@@ -169,7 +169,7 @@ it("deletes a habit after confirmation", async () => {
   );
 
   await waitFor(() => {
-    expect(mockedDeleteHabit).toHaveBeenCalledWith("user-habit-1");
+    expect(mockedDeleteHabit).toHaveBeenCalledWith("habit-1");
   });
 
   await waitFor(() => {

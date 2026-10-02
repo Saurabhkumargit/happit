@@ -6,15 +6,18 @@ import HabitCatalog from "../components/habits/HabitCatalog";
 import {
   adoptHabit,
   getCatalogHabits,
+  getHabits,
 } from "../services/habitApi";
 
 vi.mock("../services/habitApi", () => ({
   adoptHabit: vi.fn(),
   getCatalogHabits: vi.fn(),
+  getHabits: vi.fn(),
 }));
 
 const mockedGetCatalogHabits = vi.mocked(getCatalogHabits);
 const mockedAdoptHabit = vi.mocked(adoptHabit);
+const mockedGetHabits = vi.mocked(getHabits);
 
 function renderWithRouter(ui: React.ReactElement) {
   return render(<MemoryRouter>{ui}</MemoryRouter>);
@@ -38,6 +41,7 @@ const catalogHabit = {
 describe("HabitCatalog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedGetHabits.mockResolvedValue([]);
   });
 
   it("shows a loading state", () => {
@@ -69,6 +73,33 @@ describe("HabitCatalog", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows adopted status for habits the user already has", async () => {
+    mockedGetCatalogHabits.mockResolvedValue([catalogHabit]);
+    mockedGetHabits.mockResolvedValue([
+      {
+        id: "user-habit-1",
+        userId: "user-1",
+        habitId: "habit-1",
+        status: "ACTIVE",
+        startDate: "2026-09-08T00:00:00.000Z",
+        sortOrder: 0,
+        createdAt: "2026-09-08T00:00:00.000Z",
+        updatedAt: "2026-09-08T00:00:00.000Z",
+        archivedAt: null,
+        habit: catalogHabit,
+      },
+    ]);
+
+    renderWithRouter(<HabitCatalog />);
+
+    const button = await screen.findByRole("button", {
+      name: "Habit already adopted",
+    });
+
+    expect(button).toBeDisabled();
+    expect(screen.getByText("Adopted")).toBeInTheDocument();
+  });
+
   it("adopts a selected habit", async () => {
     mockedGetCatalogHabits.mockResolvedValue([catalogHabit]);
     mockedAdoptHabit.mockResolvedValue({
@@ -96,7 +127,7 @@ describe("HabitCatalog", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /Added to your habits/i }),
+        screen.getByRole("button", { name: /Habit already adopted/i }),
       ).toBeInTheDocument();
     });
   });

@@ -271,7 +271,10 @@ function HabitList({ onSelectHabit }: HabitListProps) {
           eyebrow="Habits"
           title="Your habits"
           actions={
-            <Link to="/app/habits/archived" className="habit-list-archived-link">
+            <Link
+              to="/app/habits/archived"
+              className="habit-list-archived-link"
+            >
               View archived
             </Link>
           }
@@ -290,7 +293,10 @@ function HabitList({ onSelectHabit }: HabitListProps) {
           eyebrow="Habits"
           title="Your habits"
           actions={
-            <Link to="/app/habits/archived" className="habit-list-archived-link">
+            <Link
+              to="/app/habits/archived"
+              className="habit-list-archived-link"
+            >
               View archived
             </Link>
           }
@@ -307,7 +313,10 @@ function HabitList({ onSelectHabit }: HabitListProps) {
           eyebrow="Habits"
           title="Your habits"
           actions={
-            <Link to="/app/habits/archived" className="habit-list-archived-link">
+            <Link
+              to="/app/habits/archived"
+              className="habit-list-archived-link"
+            >
               View archived
             </Link>
           }
@@ -479,6 +488,12 @@ function HabitList({ onSelectHabit }: HabitListProps) {
           );
         })}
       </ul>
+      <div className="habit-list-catalog-link">
+        <Link to="/app/habits/catalog">
+          <span>Browse all habits</span>
+          <span aria-hidden="true">→</span>
+        </Link>
+      </div>
     </section>
   );
 }

@@ -1,19 +1,41 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 import HabitDetail from "../components/habits/HabitDetail";
 import {
   archiveHabit,
   getHabit,
 } from "../services/habitApi";
+import { getHabitProgress } from "../services/progressApi";
+import { getActivities } from "../services/activityApi";
 
 vi.mock("../services/habitApi", () => ({
   archiveHabit: vi.fn(),
   getHabit: vi.fn(),
 }));
 
+vi.mock("../services/progressApi", () => ({
+  getHabitProgress: vi.fn(),
+}));
+
+vi.mock("../services/activityApi", () => ({
+  getActivities: vi.fn(),
+}));
+
 const mockedGetHabit = vi.mocked(getHabit);
 const mockedArchiveHabit = vi.mocked(archiveHabit);
+const mockedGetHabitProgress = vi.mocked(getHabitProgress);
+const mockedGetActivities = vi.mocked(getActivities);
+
+function renderHabitDetail(props: { habitId?: string; onArchived?: () => void } = {}) {
+  const { habitId = "user-habit-1", onArchived } = props;
+  return render(
+    <MemoryRouter>
+      <HabitDetail habitId={habitId} onArchived={onArchived} />
+    </MemoryRouter>,
+  );
+}
 
 const baseHabit = {
   id: "user-habit-1",
@@ -41,15 +63,35 @@ const baseHabit = {
   },
 };
 
+const defaultProgress = {
+  habit: {
+    id: "habit-1",
+    key: "reading",
+    name: "Read",
+    targetType: "DURATION" as const,
+    targetValue: 30,
+    targetUnit: "minutes",
+    scheduleType: "DAILY" as const,
+    scheduleConfig: {},
+  },
+  range: { from: "2026-09-01", to: "2026-10-01", timezone: "UTC" },
+  consistency: { completed: 0, expected: 0, percentage: 0 },
+  streaks: { current: 0, longest: 0 },
+  occurrences: [],
+  heatmap: [],
+};
+
 describe("HabitDetail", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedGetHabitProgress.mockResolvedValue(defaultProgress);
+    mockedGetActivities.mockResolvedValue([]);
   });
 
   it("shows a loading state", () => {
     mockedGetHabit.mockReturnValue(new Promise(() => {}));
 
-    render(<HabitDetail habitId="user-habit-1" />);
+    renderHabitDetail();
 
     expect(screen.getByText("Loading habit...")).toBeInTheDocument();
   });
@@ -57,7 +99,7 @@ describe("HabitDetail", () => {
   it("renders habit details", async () => {
     mockedGetHabit.mockResolvedValue(baseHabit);
 
-    render(<HabitDetail habitId="user-habit-1" />);
+    renderHabitDetail();
 
     expect(
       await screen.findByRole("heading", { name: "Read" }),
@@ -77,7 +119,7 @@ describe("HabitDetail", () => {
       new Error("Unable to load habit"),
     );
 
-    render(<HabitDetail habitId="user-habit-1" />);
+    renderHabitDetail();
 
     expect(
       await screen.findByRole("alert"),
@@ -97,12 +139,7 @@ describe("HabitDetail", () => {
 
     const onArchived = vi.fn();
 
-    render(
-      <HabitDetail
-        habitId="user-habit-1"
-        onArchived={onArchived}
-      />,
-    );
+    renderHabitDetail({ onArchived });
 
     fireEvent.click(
       await screen.findByRole("button", {
@@ -126,7 +163,7 @@ describe("HabitDetail", () => {
       new Error("Unable to archive habit"),
     );
 
-    render(<HabitDetail habitId="user-habit-1" />);
+    renderHabitDetail();
 
     fireEvent.click(
       await screen.findByRole("button", {

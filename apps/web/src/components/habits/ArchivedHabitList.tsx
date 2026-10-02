@@ -54,15 +54,15 @@ function ArchivedHabitList() {
     loadHabits();
   }, []);
 
-  async function handleRestore(userHabitId: string) {
+  async function handleRestore(habitId: string) {
     try {
       setError(null);
-      setRestoringHabitId(userHabitId);
+      setRestoringHabitId(habitId);
 
-      await restoreHabit(userHabitId);
+      await restoreHabit(habitId);
 
       setHabits((current) =>
-        current.filter((habit) => habit.id !== userHabitId),
+        current.filter((habit) => habit.habitId !== habitId),
       );
     } catch (error) {
       setError(
@@ -88,7 +88,7 @@ function ArchivedHabitList() {
 
       await deleteHabit(habitId);
 
-      setHabits((current) => current.filter((habit) => habit.id !== habitId));
+      setHabits((current) => current.filter((habit) => habit.habitId !== habitId));
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Unable to delete habit",
@@ -143,20 +143,20 @@ function ArchivedHabitList() {
 
             <button
               type="button"
-              onClick={() => handleRestore(userHabit.id)}
-              disabled={restoringHabitId === userHabit.id}
+              onClick={() => handleRestore(userHabit.habitId)}
+              disabled={restoringHabitId === userHabit.habitId}
             >
-              {restoringHabitId === userHabit.id
+              {restoringHabitId === userHabit.habitId
                 ? "Restoring..."
                 : "Restore"}
             </button>
 
             <button
               type="button"
-              onClick={() => handleDelete(userHabit.id)}
-              disabled={deletingHabitId === userHabit.id}
+              onClick={() => handleDelete(userHabit.habitId)}
+              disabled={deletingHabitId === userHabit.habitId}
             >
-              {deletingHabitId === userHabit.id ? "Deleting..." : "Delete"}
+              {deletingHabitId === userHabit.habitId ? "Deleting..." : "Delete"}
             </button>
           </li>
         ))}
