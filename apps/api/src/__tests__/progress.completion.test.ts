@@ -59,7 +59,7 @@ describe("progress completion evaluation", () => {
     expect(result.completionPercentage).toBe(100);
   });
 
-  it("keeps over-target activity uncapped", () => {
+  it("keeps over-target actualValue uncapped and caps completionPercentage at 100", () => {
     const result = evaluateCompletion(
       target,
       {
@@ -72,7 +72,7 @@ describe("progress completion evaluation", () => {
 
     expect(result.state).toBe("COMPLETED");
     expect(result.actualValue).toBe(45);
-    expect(result.completionPercentage).toBe(150);
+    expect(result.completionPercentage).toBe(100);
   });
 
   it("preserves UPCOMING state even when activity is present", () => {

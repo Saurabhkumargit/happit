@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, CalendarDays, Filter } from "lucide-react";
+import { CalendarDays, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -414,7 +414,7 @@ function ActivityHistory({
                           )
                         }
                       >
-                        <span className="activity-history-row-main">
+                        <div className="activity-history-row-main">
                           <span className="activity-history-row-name">
                             {activity.habit.name}
                           </span>
@@ -426,20 +426,19 @@ function ActivityHistory({
                             </span>
                             {activity.activityDate}
                           </span>
-                        </span>
+                        </div>
 
-                        <span className="activity-history-row-value">
+                        <div className="activity-history-row-value">
                           <span>
                             {formatActivityValue(
                               activity,
                             )}
                           </span>
+                        </div>
 
-                          <ArrowRight
-                            size={16}
-                            aria-hidden="true"
-                          />
-                        </span>
+                        <div className="activity-history-row-action">
+                          View
+                        </div>
                       </button>
                     ))}
                   </div>

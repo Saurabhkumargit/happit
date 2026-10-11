@@ -1,14 +1,15 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Activity,
   ChartNoAxesCombined,
+  ChartNoAxesColumnIncreasing,
+  History,
   Home,
+  House,
   ListChecks,
   LogOut,
-  Menu,
   Trash2,
-  X,
 } from "lucide-react";
 
 import "./AppShell.css";
@@ -27,7 +28,6 @@ interface SidebarLinkProps {
   icon: ReactNode;
   label: string;
   end?: boolean;
-  onClick?: () => void;
 }
 
 function SidebarLink({
@@ -35,19 +35,24 @@ function SidebarLink({
   icon,
   label,
   end = false,
-  onClick,
 }: SidebarLinkProps) {
   return (
     <NavLink
       to={to}
       end={end}
-      onClick={onClick}
       className={({ isActive }) =>
-        isActive ? "app-sidebar-link active" : "app-sidebar-link"
+        isActive
+          ? "app-sidebar-link active"
+          : "app-sidebar-link"
       }
     >
-      <span className="app-sidebar-icon">{icon}</span>
-      <span className="app-sidebar-label">{label}</span>
+      <span className="app-sidebar-icon">
+        {icon}
+      </span>
+
+      <span className="app-sidebar-label">
+        {label}
+      </span>
     </NavLink>
   );
 }
@@ -61,7 +66,6 @@ function AppShell({
   isDeleting,
 }: AppShellProps) {
   const navigate = useNavigate();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   function handleDeleteAccount() {
     const confirmed = window.confirm(
@@ -75,37 +79,15 @@ function AppShell({
     void onDeleteAccount();
   }
 
-  function closeMobileSidebar() {
-    setMobileOpen(false);
-  }
-
   return (
     <div className="app-shell">
-      {/* Mobile backdrop */}
-      {mobileOpen && (
-        <div
-          className="app-mobile-overlay"
-          onClick={closeMobileSidebar}
-          aria-hidden="true"
-        />
-      )}
-
       {/* Mobile header */}
       <header className="app-mobile-header">
         <button
           type="button"
-          className="app-mobile-menu-button"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open navigation"
-          aria-expanded={mobileOpen}
-        >
-          <Menu size={21} />
-        </button>
-
-        <button
-          type="button"
           className="app-mobile-brand"
           onClick={() => navigate("/app")}
+          aria-label="Go to Home"
         >
           <img
             src="/happit%20logo.png"
@@ -116,22 +98,22 @@ function AppShell({
           <span>Happit</span>
         </button>
 
-        <div className="app-mobile-avatar">
+        <div
+          className="app-mobile-avatar"
+          aria-label={`Signed in as ${userEmail}`}
+        >
           {userEmail.charAt(0).toUpperCase()}
         </div>
       </header>
 
-      {/* Sidebar - Single source of truth for navigation & account */}
-      <aside className={`app-sidebar ${mobileOpen ? "open" : ""}`}>
+      {/* Desktop sidebar */}
+      <aside className="app-sidebar">
         <div className="app-sidebar-inner">
           <div className="app-brand">
             <button
               type="button"
               className="app-brand-button"
-              onClick={() => {
-                navigate("/app");
-                closeMobileSidebar();
-              }}
+              onClick={() => navigate("/app")}
               aria-label="Go to Home"
             >
               <img
@@ -140,47 +122,41 @@ function AppShell({
                 className="app-brand-mark"
               />
 
-              <span className="app-brand-name">Happit</span>
-            </button>
-
-            <button
-              type="button"
-              className="app-mobile-close app-sidebar-close"
-              onClick={closeMobileSidebar}
-              aria-label="Close navigation"
-            >
-              <X size={20} />
+              <span className="app-brand-name">
+                Happit
+              </span>
             </button>
           </div>
 
-          <nav aria-label="Primary navigation" className="app-sidebar-nav">
+          <nav
+            aria-label="Primary navigation"
+            className="app-sidebar-nav"
+          >
             <SidebarLink
               to="/app"
               end
               icon={<Home size={18} />}
               label="Home"
-              onClick={closeMobileSidebar}
             />
 
             <SidebarLink
               to="/app/habits"
               icon={<ListChecks size={18} />}
               label="Habits"
-              onClick={closeMobileSidebar}
             />
 
             <SidebarLink
               to="/app/progress"
-              icon={<ChartNoAxesCombined size={18} />}
+              icon={
+                <ChartNoAxesCombined size={18} />
+              }
               label="Progress"
-              onClick={closeMobileSidebar}
             />
 
             <SidebarLink
               to="/app/activities"
               icon={<Activity size={18} />}
               label="History"
-              onClick={closeMobileSidebar}
             />
           </nav>
 
@@ -191,13 +167,21 @@ function AppShell({
               </div>
 
               <div className="app-account-info">
-                <span className="app-account-label">Signed in as</span>
-                <span className="app-account-email">{userEmail}</span>
+                <span className="app-account-label">
+                  Signed in as
+                </span>
+
+                <span className="app-account-email">
+                  {userEmail}
+                </span>
               </div>
             </div>
 
             {logoutError && (
-              <p className="app-error" role="alert">
+              <p
+                className="app-error"
+                role="alert"
+              >
                 {logoutError}
               </p>
             )}
@@ -206,16 +190,22 @@ function AppShell({
               type="button"
               className="app-sidebar-action"
               onClick={() => {
-                closeMobileSidebar();
                 void onLogout();
               }}
             >
-              <LogOut size={17} aria-hidden="true" />
+              <LogOut
+                size={17}
+                aria-hidden="true"
+              />
+
               <span>Log out</span>
             </button>
 
             {deleteError && (
-              <p className="app-error" role="alert">
+              <p
+                className="app-error"
+                role="alert"
+              >
                 {deleteError}
               </p>
             )}
@@ -223,15 +213,18 @@ function AppShell({
             <button
               type="button"
               className="app-sidebar-action danger"
-              onClick={() => {
-                closeMobileSidebar();
-                handleDeleteAccount();
-              }}
+              onClick={handleDeleteAccount}
               disabled={isDeleting}
             >
-              <Trash2 size={17} aria-hidden="true" />
+              <Trash2
+                size={17}
+                aria-hidden="true"
+              />
+
               <span>
-                {isDeleting ? "Deleting account..." : "Delete account"}
+                {isDeleting
+                  ? "Deleting account..."
+                  : "Delete account"}
               </span>
             </button>
           </div>
@@ -244,6 +237,77 @@ function AppShell({
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile floating navigation */}
+      <nav
+        className="mobile-bottom-nav"
+        aria-label="Primary navigation"
+      >
+        <NavLink
+          to="/app"
+          end
+          className={({ isActive }) =>
+            `mobile-bottom-nav-item ${
+              isActive ? "active" : ""
+            }`
+          }
+          aria-label="Home"
+        >
+          <House
+            size={21}
+            strokeWidth={1.8}
+            aria-hidden="true"
+          />
+        </NavLink>
+
+        <NavLink
+          to="/app/habits"
+          className={({ isActive }) =>
+            `mobile-bottom-nav-item ${
+              isActive ? "active" : ""
+            }`
+          }
+          aria-label="Habits"
+        >
+          <ListChecks
+            size={21}
+            strokeWidth={1.8}
+            aria-hidden="true"
+          />
+        </NavLink>
+
+        <NavLink
+          to="/app/progress"
+          className={({ isActive }) =>
+            `mobile-bottom-nav-item ${
+              isActive ? "active" : ""
+            }`
+          }
+          aria-label="Progress"
+        >
+          <ChartNoAxesColumnIncreasing
+            size={21}
+            strokeWidth={1.8}
+            aria-hidden="true"
+          />
+        </NavLink>
+
+        <NavLink
+          to="/app/activities"
+          className={({ isActive }) =>
+            `mobile-bottom-nav-item ${
+              isActive ? "active" : ""
+            }`
+          }
+          aria-label="History"
+        >
+          <History
+            size={21}
+            strokeWidth={1.8}
+            aria-hidden="true"
+          />
+        </NavLink>
+      </nav>
     </div>
   );
 }

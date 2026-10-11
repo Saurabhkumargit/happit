@@ -37,7 +37,7 @@ export function evaluateCompletion(
 
   const completionPercentage =
     target.targetValue > 0
-      ? (actualValue / target.targetValue) * 100
+      ? Math.min((actualValue / target.targetValue) * 100, 100)
       : 0;
 
   if (state === "NOT_SCHEDULED") {
@@ -59,6 +59,14 @@ export function evaluateCompletion(
       completionPercentage,
     };
   }
+
+//   console.log("COMPLETION DEBUG", {
+//   date,
+//   actualValue,
+//   targetValue: target.targetValue,
+//   state,
+//   result: actualValue >= target.targetValue ? "COMPLETED" : "INCOMPLETE",
+// });
 
   return {
     date,

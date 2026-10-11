@@ -223,29 +223,39 @@
   border-top: 1px solid var(--border-default, #28252f);
 }
 
+/* ─────────────────────────────────────────
+   Activity rows
+───────────────────────────────────────── */
+
 .activity-history-row {
   display: flex;
   width: 100%;
   min-height: 72px;
+
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 20px;
 
   margin: 0;
-  border: 0;
-  border-bottom: 1px solid var(--border-default, #28252f);
-  border-radius: 0;
-
   padding: 14px 4px;
 
-  appearance: none;
-  -webkit-appearance: none;
+  border: 0 !important;
+  border-bottom: 1px solid
+    var(--border-default, #28252f) !important;
+  border-radius: 0 !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
 
   background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+
   box-shadow: none !important;
 
-  color: inherit;
+  color: inherit !important;
   font: inherit;
+
   text-align: left;
 
   cursor: pointer;
@@ -253,85 +263,145 @@
   transition: none;
 }
 
-/* Keep the row completely flat on hover */
-.activity-history-row:hover {
-  background: transparent !important;
-  box-shadow: none !important;
-  padding: 14px 4px;
-}
-
-/* No purple block when clicking */
-.activity-history-row:active {
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-/* Mouse focus should not create a filled state */
+.activity-history-row:hover,
+.activity-history-row:active,
 .activity-history-row:focus {
   background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+
   box-shadow: none !important;
+
+  color: inherit !important;
 }
 
-/* Keyboard accessibility */
 .activity-history-row:focus-visible {
   background: transparent !important;
-  box-shadow: inset 0 0 0 1px var(--purple-primary, #a78bfa) !important;
-  outline: none;
+  background-color: transparent !important;
+
+  box-shadow:
+    inset 0 0 0 1px
+    var(--purple-primary, #a78bfa) !important;
+
+  outline: none !important;
 }
 
-/* The only hover feedback */
+/* Keep the row content calm.
+   Only the action gets hover feedback. */
+
 .activity-history-row:hover .activity-history-row-name {
-  color: var(--purple-hover, #b8a3ff);
+  color: var(--text-primary, #f5f3f7);
 }
 
 .activity-history-row:hover .activity-history-row-value {
-  color: var(--text-primary, #f5f3f7);
+  color: var(--text-secondary, #a8a4ae);
 }
+
+
+/* ─────────────────────────────────────────
+   Row content
+───────────────────────────────────────── */
 
 .activity-history-row-main {
   display: flex;
   min-width: 0;
+
   flex-direction: column;
   gap: 5px;
 }
 
 .activity-history-row-name {
   overflow: hidden;
+
   color: var(--text-primary, #f5f3f7);
+
   font-size: 14px;
   font-weight: 600;
+
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  transition: color 140ms ease;
 }
 
 .activity-history-row-meta {
   display: flex;
   align-items: center;
   gap: 7px;
+
   color: var(--text-muted, #706b78);
+
   font-size: 12px;
 }
 
 .activity-history-row-value {
   display: flex;
   flex-shrink: 0;
+
   align-items: center;
-  gap: 14px;
+
+  margin-left: auto;
 
   color: var(--text-secondary, #a8a4ae);
+
   font-family: "JetBrains Mono", monospace;
   font-size: 12px;
+
+  transition: color 140ms ease;
 }
 
-.activity-history-row-value svg {
-  color: var(--text-muted, #706b78);
-  transition: color 140ms ease, transform 140ms ease;
+
+/* ─────────────────────────────────────────
+   View action
+───────────────────────────────────────── */
+
+.activity-history-row-action {
+  display: inline-flex;
+
+  min-width: 0;
+  min-height: 30px;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  padding: 0 9px;
+
+  border-radius: 5px;
+
+  background: transparent !important;
+  background-color: transparent !important;
+
+  color: var(--purple-primary, #a78bfa) !important;
+
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+
+  opacity: 0;
+  transform: translateX(4px);
+
+  transition:
+    color 140ms ease,
+    background-color 140ms ease,
+    opacity 140ms ease,
+    transform 140ms ease;
 }
 
 .activity-history-row:hover
-  .activity-history-row-value svg {
-  color: var(--purple-primary, #a78bfa);
-  transform: translateX(2px);
+  .activity-history-row-action,
+.activity-history-row:focus-visible
+  .activity-history-row-action {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.activity-history-row-action:hover {
+  background: var(--purple-primary, #a78bfa) !important;
+  background-color: var(--purple-primary, #a78bfa) !important;
+
+  color: #0b0a0d !important;
 }
 
 /* Loading */
@@ -437,6 +507,17 @@
   }
 }
 
+@media (max-width: 700px) {
+  .activity-history-row-action {
+    opacity: 1;
+    transform: none;
+  }
+
+  .activity-history-row {
+    gap: 12px;
+  }
+}
+
 @media (max-width: 560px) {
   .activity-history-page {
     padding-bottom: 40px;
@@ -468,10 +549,6 @@
     gap: 8px;
   }
 
-  .activity-history-row-value svg {
-    display: none;
-  }
-
   .activity-history-row-meta {
     font-size: 11px;
   }
@@ -483,7 +560,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .activity-history-row,
-  .activity-history-row-value svg,
+  .activity-history-row-action,
   .activity-history-field select,
   .activity-history-field input,
   .activity-history-apply,

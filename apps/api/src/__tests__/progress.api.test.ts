@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 
 import app from "../app.js";
@@ -9,6 +9,11 @@ import { db } from "../db/index.js";
 import { users } from "../db/schema.js";
 
 const testEmails: string[] = [];
+
+beforeAll(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+});
 
 afterAll(async () => {
   for (const email of testEmails) {
@@ -22,6 +27,8 @@ afterAll(async () => {
       await db.delete(users).where(eq(users.id, user.id));
     }
   }
+
+  vi.useRealTimers();
 });
 
 async function createAuthenticatedAgent() {

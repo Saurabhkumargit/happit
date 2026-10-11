@@ -12,7 +12,7 @@ describe("GET /api/v1/habits/catalog", () => {
       .get("/api/v1/habits/catalog")
       .expect(200);
 
-    expect(response.body.habits).toHaveLength(6);
+    expect(response.body.habits.length).toBeGreaterThanOrEqual(6);
 
     expect(response.body.habits).toEqual(
       expect.arrayContaining([

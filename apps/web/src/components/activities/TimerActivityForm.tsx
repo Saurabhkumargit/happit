@@ -1,4 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  Check,
+  ChevronDown,
+  Clock3,
+  Pause,
+  Play,
+  RotateCcw,
+  Square,
+} from "lucide-react";
 
 import {
   getHabits,
@@ -15,6 +24,8 @@ import {
   loadTimerState,
   clearTimerState,
 } from "../../lib/timerStorage";
+
+import "./TimerActivityForm.css";
 
 interface TimerActivityFormProps {
   onSaved?: (activity: Activity) => void;
@@ -42,21 +53,68 @@ function formatElapsed(seconds: number) {
     .join(":");
 }
 
-function TimerActivityForm({ onSaved, initialHabitId }: TimerActivityFormProps) {
+function getTargetSeconds(habit: UserHabit["habit"]) {
+  const target = Number(habit.targetValue);
+
+  if (!Number.isFinite(target) || target <= 0) {
+    return null;
+  }
+
+  if (habit.targetUnit === "MINUTES") {
+    return target * 60;
+  }
+
+  if (habit.targetUnit === "SECONDS") {
+    return target;
+  }
+
+  return null;
+}
+
+function formatProgressPercentage(
+  elapsedSeconds: number,
+  habit: UserHabit["habit"],
+) {
+  const targetSeconds = getTargetSeconds(habit);
+
+  if (!targetSeconds) {
+    return null;
+  }
+
+  return Math.min(
+    100,
+    Math.round((elapsedSeconds / targetSeconds) * 100),
+  );
+}
+
+function TimerActivityForm({
+  onSaved,
+  initialHabitId,
+}: TimerActivityFormProps) {
   const [habits, setHabits] = useState<UserHabit[]>([]);
   const [selectedHabitId, setSelectedHabitId] = useState("");
-  const [timerState, setTimerState] = useState<TimerState>("IDLE");
+  const [timerState, setTimerState] =
+    useState<TimerState>("IDLE");
+
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError, setLoadError] =
+    useState<string | null>(null);
 
   const startedAtRef = useRef<string | null>(null);
   const runningSinceRef = useRef<number | null>(null);
   const accumulatedSecondsRef = useRef(0);
+
   const [isSaving, setIsSaving] = useState(false);
-const [saveError, setSaveError] = useState<string | null>(null);
-const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
-const [endedAt, setEndedAt] = useState<string | null>(null);
+  const [saveError, setSaveError] =
+    useState<string | null>(null);
+
+  const [idempotencyKey, setIdempotencyKey] =
+    useState<string | null>(null);
+
+  const [endedAt, setEndedAt] =
+    useState<string | null>(null);
 
   useEffect(() => {
     async function loadHabits() {
@@ -66,40 +124,59 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
         const result = await getHabits();
         setHabits(result);
 
-        // Try to restore timer state
         const savedState = loadTimerState();
-        if (savedState && result.length > 0) {
-          const habit = result.find((h) => h.id === savedState.habitId);
-          if (habit) {
-            // Restore timer state
-            setSelectedHabitId(savedState.habitId);
-            startedAtRef.current = savedState.startedAt;
-            accumulatedSecondsRef.current = savedState.accumulatedSeconds;
 
-            if (savedState.state === "RUNNING" && savedState.runningSince) {
-              // Calculate elapsed time since last save
+        if (savedState && result.length > 0) {
+          const habit = result.find(
+            (h) => h.id === savedState.habitId,
+          );
+
+          if (habit) {
+            setSelectedHabitId(savedState.habitId);
+
+            startedAtRef.current =
+              savedState.startedAt;
+
+            accumulatedSecondsRef.current =
+              savedState.accumulatedSeconds;
+
+            if (
+              savedState.state === "RUNNING" &&
+              savedState.runningSince
+            ) {
               const now = Date.now();
+
               const additionalSeconds = Math.floor(
-                (now - savedState.runningSince) / 1000
+                (now - savedState.runningSince) / 1000,
               );
-              accumulatedSecondsRef.current += additionalSeconds;
+
+              accumulatedSecondsRef.current +=
+                additionalSeconds;
+
               runningSinceRef.current = now;
+
               setTimerState("RUNNING");
             } else {
               setTimerState("PAUSED");
             }
 
-            setElapsedSeconds(accumulatedSecondsRef.current);
+            setElapsedSeconds(
+              accumulatedSecondsRef.current,
+            );
           } else {
             clearTimerState();
           }
         } else if (result.length > 0) {
-  const initialHabit = initialHabitId
-    ? result.find((habit) => habit.id === initialHabitId)
-    : undefined;
+          const initialHabit = initialHabitId
+            ? result.find(
+                (habit) => habit.id === initialHabitId,
+              )
+            : undefined;
 
-  setSelectedHabitId(initialHabit?.id ?? result[0].id);
-}
+          setSelectedHabitId(
+            initialHabit?.id ?? result[0].id,
+          );
+        }
       } catch (error) {
         setLoadError(
           error instanceof Error
@@ -127,14 +204,21 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
       const currentElapsed =
         accumulatedSecondsRef.current +
         Math.floor(
-          (Date.now() - runningSinceRef.current) / 1000,
+          (Date.now() - runningSinceRef.current) /
+            1000,
         );
 
       setElapsedSeconds(currentElapsed);
 
-      // Persist state every 10 seconds while running
-      if (currentElapsed % 10 === 0 && selectedHabitId && startedAtRef.current) {
-        const habit = habits.find((h) => h.id === selectedHabitId);
+      if (
+        currentElapsed % 10 === 0 &&
+        selectedHabitId &&
+        startedAtRef.current
+      ) {
+        const habit = habits.find(
+          (h) => h.id === selectedHabitId,
+        );
+
         if (habit) {
           saveTimerState({
             habitId: selectedHabitId,
@@ -163,7 +247,9 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
     }
 
     if (timerState === "IDLE") {
-      startedAtRef.current = new Date().toISOString();
+      startedAtRef.current =
+        new Date().toISOString();
+
       accumulatedSecondsRef.current = 0;
 
       setElapsedSeconds(0);
@@ -185,23 +271,33 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
     }
 
     accumulatedSecondsRef.current += Math.floor(
-      (Date.now() - runningSinceRef.current) / 1000,
+      (Date.now() - runningSinceRef.current) /
+        1000,
     );
 
     runningSinceRef.current = null;
 
-    setElapsedSeconds(accumulatedSecondsRef.current);
+    setElapsedSeconds(
+      accumulatedSecondsRef.current,
+    );
+
     setTimerState("PAUSED");
 
-    // Save paused state
-    if (selectedHabitId && startedAtRef.current) {
-      const habit = habits.find((h) => h.id === selectedHabitId);
+    if (
+      selectedHabitId &&
+      startedAtRef.current
+    ) {
+      const habit = habits.find(
+        (h) => h.id === selectedHabitId,
+      );
+
       if (habit) {
         saveTimerState({
           habitId: selectedHabitId,
           habitName: habit.habit.name,
           startedAt: startedAtRef.current,
-          accumulatedSeconds: accumulatedSecondsRef.current,
+          accumulatedSeconds:
+            accumulatedSecondsRef.current,
           runningSince: null,
           state: "PAUSED",
         });
@@ -231,13 +327,17 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
       runningSinceRef.current !== null
     ) {
       accumulatedSecondsRef.current += Math.floor(
-        (Date.now() - runningSinceRef.current) / 1000,
+        (Date.now() - runningSinceRef.current) /
+          1000,
       );
 
       runningSinceRef.current = null;
     }
 
-    setElapsedSeconds(accumulatedSecondsRef.current);
+    setElapsedSeconds(
+      accumulatedSecondsRef.current,
+    );
+
     setEndedAt(new Date().toISOString());
     setTimerState("REVIEW");
   }
@@ -253,7 +353,6 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
     setIdempotencyKey(null);
     setTimerState("IDLE");
 
-    // Clear persisted state
     clearTimerState();
   }
 
@@ -262,14 +361,19 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
   }
 
   async function handleSave() {
-    if (!selectedHabit || !startedAtRef.current || !endedAt) {
+    if (
+      !selectedHabit ||
+      !startedAtRef.current ||
+      !endedAt
+    ) {
       return;
     }
 
     setSaveError(null);
     setIsSaving(true);
 
-    const key = idempotencyKey ?? createIdempotencyKey();
+    const key =
+      idempotencyKey ?? createIdempotencyKey();
 
     if (!idempotencyKey) {
       setIdempotencyKey(key);
@@ -279,7 +383,9 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
       const activity = await createActivity(
         {
           userHabitId: selectedHabit.id,
-          activityDate: new Date().toISOString().slice(0, 10),
+          activityDate: new Date()
+            .toISOString()
+            .slice(0, 10),
           source: "TIMER",
           durationSeconds: elapsedSeconds,
           startedAt: startedAtRef.current,
@@ -288,7 +394,6 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
         key,
       );
 
-      // Clear persisted state on successful save
       clearTimerState();
 
       onSaved?.(activity);
@@ -304,163 +409,356 @@ const [endedAt, setEndedAt] = useState<string | null>(null);
   }
 
   if (isLoading) {
-    return <p>Loading habits...</p>;
+    return (
+      <section className="timer-page">
+        <div className="timer-loading">
+          <div className="timer-loading-line" />
+          <div className="timer-loading-circle" />
+        </div>
+      </section>
+    );
   }
 
   if (loadError) {
-    return <p role="alert">{loadError}</p>;
+    return (
+      <section className="timer-page">
+        <div
+          className="timer-error"
+          role="alert"
+        >
+          <strong>Couldn't load your habits</strong>
+          <span>{loadError}</span>
+        </div>
+      </section>
+    );
   }
 
   if (habits.length === 0) {
     return (
-      <section>
-        <h2>Timer</h2>
-        <p>
-          You don't have any active habits to record activity
-          against.
-        </p>
+      <section className="timer-page">
+        <div className="timer-empty">
+          <Clock3 size={22} aria-hidden="true" />
+
+          <span className="timer-eyebrow">
+            TIMER
+          </span>
+
+          <h1>No active habits</h1>
+
+          <p>
+            Adopt a habit before recording a timed
+            activity.
+          </p>
+        </div>
       </section>
     );
   }
 
-  if (timerState === "REVIEW" && selectedHabit) {
+  if (
+    timerState === "REVIEW" &&
+    selectedHabit
+  ) {
+    const progress = formatProgressPercentage(
+      elapsedSeconds,
+      selectedHabit.habit,
+    );
+
     return (
-      <section>
-        <h2>Review activity</h2>
+      <section className="timer-page">
+        <div className="timer-review">
+          <div className="timer-review-header">
+            <span className="timer-eyebrow">
+              ACTIVITY COMPLETE
+            </span>
 
-        <p>
-          <strong>Habit:</strong> {selectedHabit.habit.name}
-        </p>
+            <div className="timer-review-icon">
+              <Check
+                size={20}
+                aria-hidden="true"
+              />
+            </div>
+          </div>
 
-        <p>
-          <strong>Habit target:</strong>{" "}
-          {formatTarget(selectedHabit.habit)}
-        </p>
+          <h1 className="timer-review-title">
+            {selectedHabit.habit.name}
+          </h1>
 
-        <p>
-          <strong>Actual duration:</strong>{" "}
-          {formatElapsed(elapsedSeconds)}
-        </p>
+          <div className="timer-review-duration">
+            {formatElapsed(elapsedSeconds)}
+          </div>
 
-        <p>
-          This activity will be recorded as a timer activity.
-        </p>
+          <div className="timer-review-stats">
+            <div>
+              <span>Target</span>
+              <strong>
+                {formatTarget(
+                  selectedHabit.habit,
+                )}
+              </strong>
+            </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setIdempotencyKey(null);
-            setSaveError(null);
-            setTimerState("PAUSED");
-          }}
-        >
-          Edit
-        </button>
+            <div>
+              <span>Recorded</span>
+              <strong>
+                {formatElapsed(elapsedSeconds)}
+              </strong>
+            </div>
 
-        {saveError && (
-          <p role="alert">{saveError}</p>
-        )}
+            {progress !== null && (
+              <div>
+                <span>Progress</span>
+                <strong>{progress}%</strong>
+              </div>
+            )}
+          </div>
 
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={isSaving}
-        >
-          {isSaving ? "Saving..." : "Save activity"}
-        </button>
+          <p className="timer-review-note">
+            This session will be recorded as a
+            timer activity.
+          </p>
+
+          {saveError && (
+            <div
+              className="timer-save-error"
+              role="alert"
+            >
+              <strong>
+                Couldn't save this activity
+              </strong>
+
+              <span>{saveError}</span>
+
+              <span>
+                Your recorded duration is still
+                preserved. Try saving again.
+              </span>
+            </div>
+          )}
+
+          <div className="timer-review-actions">
+            <button
+              className="timer-primary-button"
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving
+                ? "Saving..."
+                : "Save activity"}
+            </button>
+
+            <button
+              className="timer-secondary-button"
+              type="button"
+              onClick={() => {
+                setIdempotencyKey(null);
+                setSaveError(null);
+                setTimerState("PAUSED");
+              }}
+              disabled={isSaving}
+            >
+              Edit
+            </button>
+          </div>
+        </div>
       </section>
     );
   }
+
+  const progress =
+    selectedHabit
+      ? formatProgressPercentage(
+          elapsedSeconds,
+          selectedHabit.habit,
+        )
+      : null;
 
   return (
-    <section>
-      <h2>Timer</h2>
+    <section className="timer-page">
+      <div className="timer-workspace">
+        <header className="timer-header">
+          <span className="timer-eyebrow">
+            TIMER
+          </span>
 
-      <label htmlFor="timer-habit">
-        Habit
-      </label>
+          <div className="timer-habit-selector">
+            <label htmlFor="timer-habit">
+              Habit
+            </label>
 
-      <select
-        id="timer-habit"
-        value={selectedHabitId}
-        onChange={(event) => {
-          if (timerState !== "IDLE") {
-            return;
-          }
+            <div className="timer-select-wrap">
+              <select
+                id="timer-habit"
+                value={selectedHabitId}
+                onChange={(event) => {
+                  if (timerState !== "IDLE") {
+                    return;
+                  }
 
-          setSelectedHabitId(event.target.value);
-        }}
-        disabled={timerState !== "IDLE"}
-      >
-        {habits.map((habit) => (
-          <option key={habit.id} value={habit.id}>
-            {habit.habit.name}
-          </option>
-        ))}
-      </select>
+                  setSelectedHabitId(
+                    event.target.value,
+                  );
+                }}
+                disabled={
+                  timerState !== "IDLE"
+                }
+              >
+                {habits.map((habit) => (
+                  <option
+                    key={habit.id}
+                    value={habit.id}
+                  >
+                    {habit.habit.name}
+                  </option>
+                ))}
+              </select>
 
-      {selectedHabit && (
-        <p>
-          <strong>Target:</strong>{" "}
-          {formatTarget(selectedHabit.habit)}
-        </p>
-      )}
+              <ChevronDown
+                size={16}
+                aria-hidden="true"
+              />
+            </div>
+          </div>
+        </header>
 
-      <p aria-live="polite">
-        <strong>{formatElapsed(elapsedSeconds)}</strong>
-      </p>
+        {selectedHabit && (
+          <div className="timer-focus">
+            <div className="timer-habit-name">
+              {selectedHabit.habit.name}
+            </div>
 
-      {timerState === "IDLE" && (
-        <button
-          type="button"
-          onClick={handleStart}
-        >
-          Start
-        </button>
-      )}
+            <div className="timer-target">
+              Target ·{" "}
+              {formatTarget(
+                selectedHabit.habit,
+              )}
+            </div>
 
-      {timerState === "RUNNING" && (
-        <>
-          <button
-            type="button"
-            onClick={handlePause}
-          >
-            Pause
-          </button>
+            <div
+              className="timer-display"
+              aria-live="polite"
+              aria-label={`Elapsed time ${formatElapsed(
+                elapsedSeconds,
+              )}`}
+            >
+              {formatElapsed(elapsedSeconds)}
+            </div>
 
-          <button
-            type="button"
-            onClick={handleStop}
-          >
-            Stop
-          </button>
-        </>
-      )}
+            {timerState === "PAUSED" && (
+              <div className="timer-status">
+                <span className="timer-status-dot" />
+                Paused
+              </div>
+            )}
 
-      {timerState === "PAUSED" && (
-        <>
-          <button
-            type="button"
-            onClick={handleResume}
-          >
-            Resume
-          </button>
+            {progress !== null &&
+              elapsedSeconds > 0 && (
+                <div className="timer-progress">
+                  <div className="timer-progress-header">
+                    <span>Target progress</span>
+                    <span>{progress}%</span>
+                  </div>
 
-          <button
-            type="button"
-            onClick={handleStop}
-          >
-            Stop
-          </button>
+                  <div className="timer-progress-track">
+                    <div
+                      className="timer-progress-fill"
+                      style={{
+                        width: `${progress}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
-          <button
-            type="button"
-            onClick={handleCancel}
-          >
-            Cancel
-          </button>
-        </>
-      )}
+            <div className="timer-actions">
+              {timerState === "IDLE" && (
+                <button
+                  className="timer-primary-button timer-start-button"
+                  type="button"
+                  onClick={handleStart}
+                >
+                  <Play
+                    size={17}
+                    fill="currentColor"
+                    aria-hidden="true"
+                  />
+                  Start
+                </button>
+              )}
+
+              {timerState === "RUNNING" && (
+                <>
+                  <button
+                    className="timer-secondary-button"
+                    type="button"
+                    onClick={handlePause}
+                  >
+                    <Pause
+                      size={16}
+                      aria-hidden="true"
+                    />
+                    Pause
+                  </button>
+
+                  <button
+                    className="timer-primary-button"
+                    type="button"
+                    onClick={handleStop}
+                  >
+                    <Square
+                      size={15}
+                      fill="currentColor"
+                      aria-hidden="true"
+                    />
+                    Finish
+                  </button>
+                </>
+              )}
+
+              {timerState === "PAUSED" && (
+                <>
+                  <button
+                    className="timer-primary-button"
+                    type="button"
+                    onClick={handleResume}
+                  >
+                    <Play
+                      size={17}
+                      fill="currentColor"
+                      aria-hidden="true"
+                    />
+                    Resume
+                  </button>
+
+                  <button
+                    className="timer-secondary-button"
+                    type="button"
+                    onClick={handleStop}
+                  >
+                    <Check
+                      size={16}
+                      aria-hidden="true"
+                    />
+                    Finish
+                  </button>
+
+                  <button
+                    className="timer-text-button"
+                    type="button"
+                    onClick={handleCancel}
+                  >
+                    <RotateCcw
+                      size={14}
+                      aria-hidden="true"
+                    />
+                    Cancel session
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

@@ -180,13 +180,7 @@ function getProgressLabel(occurrence: Occurrence, targetUnit: string): string {
   return "Not completed";
 }
 
-function getActionLabel(habit: UserHabit): string {
-  if (habit.habit.targetType === "DURATION") {
-    return "Start";
-  }
 
-  return "Log";
-}
 
 function Home() {
   const navigate = useNavigate();
@@ -303,9 +297,9 @@ function Home() {
     ({ occurrence }) => occurrence && occurrence.state !== "UNSCHEDULED",
   );
 
-  const completedToday = expectedToday.filter(
+  const completedToday = todayHabits.filter(
     ({ occurrence }) => occurrence?.state === "COMPLETED",
-  );
+  ).length;
 
   const recentActivities = [...activities]
     .sort((a, b) => {
@@ -319,7 +313,7 @@ function Home() {
 
       return first - second;
     })
-    .slice(0, 5);
+    .slice(0, 3);
 
   return (
     <section className="home-page">
@@ -334,7 +328,7 @@ function Home() {
 
           <div className="home-completion">
             <span className="home-completion-value">
-              {completedToday.length}
+              {completedToday}
             </span>
             <span className="home-completion-total">
               / {expectedToday.length}
@@ -353,7 +347,7 @@ function Home() {
             </div>
 
             <span className="home-section-count">
-              {completedToday.length} of {expectedToday.length}
+              {completedToday} of {expectedToday.length}
             </span>
           </div>
 
@@ -399,24 +393,35 @@ function Home() {
                   </div>
 
                   {!isCompleted && !isUnscheduled && (
-                    <button
-                      type="button"
-                      className="home-habit-action"
-                      onClick={() => {
-                        if (userHabit.habit.targetType === "DURATION") {
-                          navigate(
-                            `/app/activities/timer?habitId=${userHabit.id}`,
-                          );
-                        } else {
-                          navigate(
-                            `/app/activities/new?habitId=${userHabit.id}`,
-                          );
-                        }
-                      }}
-                    >
-                      {getActionLabel(userHabit)}
-                      <ArrowRight size={15} aria-hidden="true" />
-                    </button>
+                    <div className="home-habit-actions">
+                      {userHabit.habit.targetType === "DURATION" && (
+                        <>
+                          <button
+                            type="button"
+                            className="home-habit-action home-habit-action-secondary"
+                            onClick={() =>
+                              navigate(
+                                `/app/activities/new?habitId=${userHabit.id}`,
+                              )
+                            }
+                          >
+                            Log
+                          </button>
+
+                          <button
+                            type="button"
+                            className="home-habit-action home-habit-action-primary"
+                            onClick={() =>
+                              navigate(
+                                `/app/activities/timer?habitId=${userHabit.id}`,
+                              )
+                            }
+                          >
+                            Start
+                          </button>
+                        </>
+                      )}
+                    </div>
                   )}
                 </article>
               );
@@ -448,17 +453,46 @@ function Home() {
                 date.setDate(date.getDate() + index);
 
                 const dateString = getLocalDateString(date);
+
                 const dayLabel = new Intl.DateTimeFormat("en-US", {
                   weekday: "short",
                 }).format(date);
 
-                const completed = progress?.habits.some((habitProgress) =>
-                  habitProgress.occurrences.some(
-                    (occurrence) =>
-                      occurrence.date === dateString &&
-                      occurrence.state === "COMPLETED",
-                  ),
-                );
+                const dayHabits =
+                  progress?.habits
+                    .map((habitProgress) =>
+                      habitProgress.occurrences.find(
+                        (occurrence) => occurrence.date === dateString,
+                      ),
+                    )
+                    .filter(
+                      (occurrence): occurrence is Occurrence =>
+                        occurrence !== undefined &&
+                        occurrence.state !== "UNSCHEDULED",
+                    ) ?? [];
+
+                const expected = dayHabits.length;
+
+                const completed = dayHabits.filter(
+                  (occurrence) => occurrence.state === "COMPLETED",
+                ).length;
+
+                const completionRatio =
+                  expected > 0 ? completed / expected : 0;
+
+                let intensity = 0;
+
+                if (completionRatio > 0 && completionRatio <= 0.2) {
+                  intensity = 1;
+                } else if (completionRatio <= 0.4) {
+                  intensity = 2;
+                } else if (completionRatio <= 0.6) {
+                  intensity = 3;
+                } else if (completionRatio < 1) {
+                  intensity = 4;
+                } else if (completionRatio === 1) {
+                  intensity = 5;
+                }
 
                 const isToday = dateString === today;
 
@@ -466,12 +500,24 @@ function Home() {
                   <div
                     key={dateString}
                     className={`home-week-day${
-                      completed ? " completed" : ""
-                    }${isToday ? " today" : ""}`}
+                      isToday ? " today" : ""
+                    }`}
+                    title={
+                      expected > 0
+                        ? `${completed} of ${expected} habits completed`
+                        : "No scheduled habits"
+                    }
                   >
                     <span>{dayLabel.slice(0, 1)}</span>
 
-                    <span className="home-week-dot" aria-hidden="true" />
+                    <span
+                      className={`home-week-dot intensity-${intensity}`}
+                      aria-label={
+                        expected > 0
+                          ? `${completed} of ${expected} habits completed`
+                          : "No scheduled habits"
+                      }
+                    />
                   </div>
                 );
               })}
@@ -522,6 +568,10 @@ function Home() {
 
                     <span className="home-activity-value">
                       {formatActivityValue(activity)}
+                    </span>
+
+                    <span className="home-activity-view">
+                      View
                     </span>
                   </button>
                 ))}

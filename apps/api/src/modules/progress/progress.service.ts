@@ -136,7 +136,7 @@ export async function getHabitProgress(
         ? aggregateActivities(activitiesForDate)
         : undefined;
 
-    return evaluateCompletion(
+    const evaluated = evaluateCompletion(
       {
         targetType: habit.targetType,
         targetValue: Number(habit.targetValue),
@@ -146,6 +146,8 @@ export async function getHabitProgress(
       occurrence.date,
       occurrence.state,
     );
+
+    return evaluated;
   });
 
   const consistency = calculateConsistency(occurrences);

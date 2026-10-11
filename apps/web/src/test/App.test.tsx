@@ -232,7 +232,7 @@ describe("App authentication", () => {
     render(<App />);
 
     fireEvent.click(
-      await screen.findByRole("link", { name: "Habits" }),
+      (await screen.findAllByRole("link", { name: "Habits" }))[0],
     );
 
     expect(
@@ -250,7 +250,7 @@ describe("App authentication", () => {
     ).toBeInTheDocument();
 
     fireEvent.click(
-      await screen.findByRole("link", { name: "Habits" }),
+      (await screen.findAllByRole("link", { name: "Habits" }))[0],
     );
 
     expect(
@@ -270,7 +270,7 @@ describe("App authentication", () => {
     render(<App />);
 
     fireEvent.click(
-      await screen.findByRole("link", { name: "Habits" }),
+      (await screen.findAllByRole("link", { name: "Habits" }))[0],
     );
 
     expect(
@@ -288,7 +288,7 @@ describe("App authentication", () => {
     ).toBeInTheDocument();
 
     fireEvent.click(
-      await screen.findByRole("link", { name: "Habits" }),
+      (await screen.findAllByRole("link", { name: "Habits" }))[0],
     );
 
     const viewArchivedLink = await screen.findByRole("link", {
@@ -302,7 +302,7 @@ describe("App authentication", () => {
     ).toBeInTheDocument();
 
     fireEvent.click(
-      await screen.findByRole("link", { name: "Habits" }),
+      (await screen.findAllByRole("link", { name: "Habits" }))[0],
     );
 
     expect(
