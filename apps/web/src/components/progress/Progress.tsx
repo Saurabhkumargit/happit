@@ -1,14 +1,13 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Activity, TrendingUp } from "lucide-react";
+import { Activity, ArrowUpRight, Flame, Target, TrendingUp } from "lucide-react";
 
 import {
   getOverallProgress,
   type OverallProgress,
 } from "../../services/progressApi";
 
-import PageHeader from "../ui/PageHeader";
-import Card from "../ui/Card";
 import Button from "../ui/Button";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import ErrorState from "../ui/ErrorState";
@@ -56,13 +55,19 @@ function Progress() {
       }
     }
 
-    loadProgress();
+    void loadProgress();
   }, []);
 
   if (isLoading) {
     return (
       <section className="progress-page">
-        <PageHeader eyebrow="Progress" title="Your progress" />
+        <div className="progress-page-heading">
+          <p className="progress-eyebrow">YOUR JOURNEY</p>
+          <h1>Your progress</h1>
+          <p className="progress-intro">
+            Small steps, repeated over time.
+          </p>
+        </div>
         <div className="progress-loading">
           <LoadingSpinner size="lg" />
         </div>
@@ -73,7 +78,13 @@ function Progress() {
   if (error) {
     return (
       <section className="progress-page">
-        <PageHeader eyebrow="Progress" title="Your progress" />
+        <div className="progress-page-heading">
+          <p className="progress-eyebrow">YOUR JOURNEY</p>
+          <h1>Your progress</h1>
+          <p className="progress-intro">
+            Small steps, repeated over time.
+          </p>
+        </div>
         <ErrorState message={error} />
       </section>
     );
@@ -82,13 +93,19 @@ function Progress() {
   if (!progress || progress.habits.length === 0) {
     return (
       <section className="progress-page">
-        <PageHeader eyebrow="Progress" title="Your progress" />
+        <div className="progress-page-heading">
+          <p className="progress-eyebrow">YOUR JOURNEY</p>
+          <h1>Your progress</h1>
+          <p className="progress-intro">
+            Small steps, repeated over time.
+          </p>
+        </div>
         <EmptyState
-          title="No progress data yet"
-          description="Start tracking your habits to see your progress here."
+          title="Your story starts here"
+          description="Adopt a habit and begin building a routine. Your consistency and activity will show up here as you go."
           action={
             <Button onClick={() => navigate("/app/habits")}>
-              View habits
+              Explore habits
             </Button>
           }
         />
@@ -96,97 +113,175 @@ function Progress() {
     );
   }
 
+  const consistency = progress.consistency.percentage;
+  const consistencyWidth = Math.min(100, Math.max(0, consistency));
+
   return (
     <section className="progress-page">
-      <PageHeader
-        eyebrow="Progress"
-        title="Your progress"
-        description="Track your consistency and streaks over time."
-      />
+      <header className="progress-page-heading">
+        <div>
+          <p className="progress-eyebrow">YOUR JOURNEY</p>
+          <h1>Your progress</h1>
+          <p className="progress-intro">
+            Every small effort counts. Keep showing up for yourself.
+          </p>
+        </div>
+        <span className="progress-period">
+          <Activity size={14} aria-hidden="true" />
+          Last 31 days
+        </span>
+      </header>
 
-      <div className="progress-summary">
-        <Card className="progress-summary-card">
-          <div className="progress-summary-icon">
-            <TrendingUp size={20} aria-hidden="true" />
+      <section className="progress-overview" aria-label="Progress overview">
+        <div className="progress-overview-main">
+          <div className="progress-overview-topline">
+            <span className="progress-overview-label">
+              <TrendingUp size={15} aria-hidden="true" />
+              OVERALL CONSISTENCY
+            </span>
+            <span className="progress-overview-period">30-day view</span>
           </div>
-          <div className="progress-summary-content">
-            <p className="progress-summary-label">Overall consistency</p>
-            <p className="progress-summary-value">
-              {formatPercentage(progress.consistency.percentage)}
-            </p>
-            <p className="progress-summary-meta">
-              {progress.consistency.completed} of {progress.consistency.expected}{" "}
-              completed
-            </p>
-          </div>
-        </Card>
 
-        <Card className="progress-summary-card">
-          <div className="progress-summary-icon">
-            <Activity size={20} aria-hidden="true" />
+          <div className="progress-overview-value">
+            {formatPercentage(consistency)}
           </div>
-          <div className="progress-summary-content">
-            <p className="progress-summary-label">Active habits</p>
-            <p className="progress-summary-value">{progress.habits.length}</p>
-            <p className="progress-summary-meta">Last 30 days</p>
-          </div>
-        </Card>
-      </div>
 
-      <div className="progress-habits">
-        <h3 className="progress-section-title">Habit breakdown</h3>
+          <p className="progress-overview-caption">
+            {progress.consistency.completed} of{" "}
+            {progress.consistency.expected} scheduled completions
+          </p>
+
+          <div
+            className="progress-overview-track"
+            role="progressbar"
+            aria-label="Overall consistency"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(consistencyWidth)}
+          >
+            <span style={{ width: `${consistencyWidth}%` }} />
+          </div>
+
+          <p className="progress-overview-note">
+            Consistency is built one day at a time.
+          </p>
+        </div>
+
+        <div className="progress-overview-side">
+          <div className="progress-mini-stat">
+            <div className="progress-mini-icon">
+              <Target size={17} aria-hidden="true" />
+            </div>
+            <div>
+              <span>Active habits</span>
+              <strong>{progress.habits.length}</strong>
+            </div>
+          </div>
+
+          <div className="progress-mini-divider" />
+
+          <div className="progress-mini-stat">
+            <div className="progress-mini-icon">
+              <Flame size={17} aria-hidden="true" />
+            </div>
+            <div>
+              <span>Completed</span>
+              <strong>{progress.consistency.completed}</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="progress-habits">
+        <header className="progress-section-header">
+          <div>
+            <p className="progress-eyebrow">THE DETAILS</p>
+            <h2>Your habits, over time</h2>
+            <p>Look for the patterns, not perfection.</p>
+          </div>
+          <span className="progress-habit-count">
+            {progress.habits.length}{" "}
+            {progress.habits.length === 1 ? "habit" : "habits"}
+          </span>
+        </header>
 
         <div className="progress-habits-list">
-          {progress.habits.map((habitProgress) => (
-            <Card key={habitProgress.habit.id} className="progress-habit-card">
-              <div className="progress-habit-header">
-                <h4 className="progress-habit-name">
-                  {habitProgress.habit.name}
-                </h4>
-                <p className="progress-habit-consistency">
-                  {formatPercentage(habitProgress.consistency.percentage)}
-                </p>
-              </div>
+          {progress.habits.map((habitProgress) => {
+            const percentage = habitProgress.consistency.percentage;
+            const width = Math.min(100, Math.max(0, percentage));
 
-              <div className="progress-habit-stats">
-                <div className="progress-habit-stat">
-                  <span className="progress-habit-stat-label">Completed</span>
-                  <span className="progress-habit-stat-value">
-                    {habitProgress.consistency.completed} /{" "}
-                    {habitProgress.consistency.expected}
+            return (
+              <article
+                key={habitProgress.habit.id}
+                className="progress-habit-card"
+              >
+                <header className="progress-habit-header">
+                  <div>
+                    <h3 className="progress-habit-name">
+                      {habitProgress.habit.name}
+                    </h3>
+                    <p className="progress-habit-completed">
+                      {habitProgress.consistency.completed} of{" "}
+                      {habitProgress.consistency.expected} completed
+                    </p>
+                  </div>
+
+                  <span className="progress-habit-consistency">
+                    {formatPercentage(percentage)}
                   </span>
+                </header>
+
+                <div
+                  className="progress-habit-track"
+                  role="progressbar"
+                  aria-label={`${habitProgress.habit.name} consistency`}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(width)}
+                >
+                  <span style={{ width: `${width}%` }} />
                 </div>
 
-                <div className="progress-habit-stat">
-                  <span className="progress-habit-stat-label">
-                    Current streak
-                  </span>
-                  <span className="progress-habit-stat-value">
-                    {habitProgress.streaks.current} days
-                  </span>
+                <div className="progress-habit-stats">
+                  <div className="progress-habit-stat">
+                    <span className="progress-habit-stat-label">
+                      Current streak
+                    </span>
+                    <strong>{habitProgress.streaks.current} days</strong>
+                  </div>
+
+                  <div className="progress-habit-stat">
+                    <span className="progress-habit-stat-label">
+                      Best streak
+                    </span>
+                    <strong>{habitProgress.streaks.longest} days</strong>
+                  </div>
                 </div>
 
-                <div className="progress-habit-stat">
-                  <span className="progress-habit-stat-label">
-                    Longest streak
-                  </span>
-                  <span className="progress-habit-stat-value">
-                    {habitProgress.streaks.longest} days
-                  </span>
-                </div>
-              </div>
+                <div className="progress-habit-heatmap">
+                  <div className="progress-heatmap-heading">
+                    <span>Daily activity</span>
+                    <span>
+                      {habitProgress.range.from} — {habitProgress.range.to}
+                    </span>
+                  </div>
 
-              <div className="progress-habit-heatmap">
-                <Heatmap
-                  data={habitProgress.heatmap}
-                  startDate={habitProgress.range.from}
-                  endDate={habitProgress.range.to}
-                />
-              </div>
-            </Card>
-          ))}
+                  <Heatmap
+                    data={habitProgress.heatmap}
+                    startDate={habitProgress.range.from}
+                    endDate={habitProgress.range.to}
+                  />
+                </div>
+              </article>
+            );
+          })}
         </div>
-      </div>
+      </section>
+
+      <p className="progress-footer-note">
+        Progress isn't about being perfect. It's about returning to what matters.
+        <ArrowUpRight size={14} aria-hidden="true" />
+      </p>
     </section>
   );
 }

@@ -4,7 +4,8 @@ export type OccurrenceState =
   | "COMPLETED"
   | "INCOMPLETE"
   | "UPCOMING"
-  | "UNSCHEDULED";
+  | "UNSCHEDULED"
+  | "NOT_SCHEDULED";
 
 export interface Occurrence {
   date: string;

@@ -1,13 +1,7 @@
-import { useEffect, useState } from "react";
-
-import {
-  getActivity,
-  updateActivity,
-  deleteActivity,
-  type Activity,
-  type ActivityUnit,
-  type UpdateActivityInput,
-} from "../../services/activityApi";
+import { useEffect, useState, type FormEvent } from "react";
+import { ArrowLeft, CalendarDays, Clock3, Pencil, Trash2, Activity as ActivityIcon, Save, X } from "lucide-react";
+import { getActivity, updateActivity, deleteActivity, type Activity, type ActivityUnit, type UpdateActivityInput } from "../../services/activityApi";
+import "./ActivityDetail.css";
 
 interface ActivityDetailProps {
   activityId: string;
@@ -15,26 +9,16 @@ interface ActivityDetailProps {
 }
 
 function formatDuration(seconds: number | null) {
-  if (seconds === null) {
-    return "—";
-  }
-
+  if (seconds === null) return "—";
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-
-  if (remainingSeconds === 0) {
-    return `${minutes} min`;
-  }
-
-  return `${minutes} min ${remainingSeconds} sec`;
+  return remainingSeconds === 0 ? `${minutes} min` : `${minutes} min ${remainingSeconds} sec`;
 }
 
 function formatDateTime(value: string | null) {
-  if (!value) {
-    return "—";
-  }
-
-  return new Date(value).toLocaleString();
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
 }
 
 function formatTarget(habit: Activity["habit"]) {
@@ -42,24 +26,28 @@ function formatTarget(habit: Activity["habit"]) {
   return `${habit.targetValue}${unit}`;
 }
 
+function formatDate(value: string) {
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+}
+
 function ActivityDetail({ activityId, onDeleted }: ActivityDetailProps) {
   const [activity, setActivity] = useState<Activity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Deletion state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Editing state
   const [isEditing, setIsEditing] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Form fields
   const [editDate, setEditDate] = useState("");
   const [editDurationMinutes, setEditDurationMinutes] = useState("");
   const [editValue, setEditValue] = useState("");
@@ -72,27 +60,18 @@ function ActivityDetail({ activityId, onDeleted }: ActivityDetailProps) {
       try {
         setIsLoading(true);
         setError(null);
-
         const result = await getActivity(activityId);
-
-        if (!cancelled) {
-          setActivity(result);
-        }
+        if (!cancelled) setActivity(result);
       } catch (err) {
         if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Unable to load activity",
-          );
+          setError(err instanceof Error ? err.message : "Unable to load activity");
         }
       } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+        if (!cancelled) setIsLoading(false);
       }
     }
 
-    loadActivity();
-
+    void loadActivity();
     return () => {
       cancelled = true;
     };
@@ -100,17 +79,12 @@ function ActivityDetail({ activityId, onDeleted }: ActivityDetailProps) {
 
   function startEditing() {
     if (!activity) return;
-
     setEditDate(activity.activityDate);
     setEditDurationMinutes(
-      activity.durationSeconds !== null
-        ? String(Math.round(activity.durationSeconds / 60))
-        : "",
+      activity.durationSeconds !== null ? String(Math.round(activity.durationSeconds / 60)) : "",
     );
     setEditValue(activity.value ?? "");
-    setEditUnit(
-      activity.unit ?? (activity.habit.targetUnit as ActivityUnit) ?? "",
-    );
+    setEditUnit(activity.unit ?? (activity.habit.targetUnit as ActivityUnit) ?? "");
     setValidationError(null);
     setSaveError(null);
     setIsReviewing(false);
@@ -124,8 +98,8 @@ function ActivityDetail({ activityId, onDeleted }: ActivityDetailProps) {
     setSaveError(null);
   }
 
-  function handleReview(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function handleReview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setValidationError(null);
 
     if (!editDate) {
@@ -140,8 +114,8 @@ function ActivityDetail({ activityId, onDeleted }: ActivityDetailProps) {
         return;
       }
     } else {
-      const val = Number(editValue);
-      if (!Number.isFinite(val) || val <= 0) {
+      const value = Number(editValue);
+      if (!Number.isFinite(value) || value <= 0) {
         setValidationError("Value must be greater than 0.");
         return;
       }
@@ -155,32 +129,22 @@ function ActivityDetail({ activityId, onDeleted }: ActivityDetailProps) {
 
     setIsSaving(true);
     setSaveError(null);
-
-    const payload: UpdateActivityInput = {
-      activityDate: editDate,
-    };
+    const payload: UpdateActivityInput = { activityDate: editDate };
 
     if (activity.habit.targetType === "DURATION") {
       payload.durationSeconds = Number(editDurationMinutes) * 60;
     } else {
       payload.value = Number(editValue);
-      if (editUnit) {
-        payload.unit = editUnit as ActivityUnit;
-      }
+      if (editUnit) payload.unit = editUnit as ActivityUnit;
     }
 
     try {
       const updated = await updateActivity(activity.id, payload);
-
-      setActivity((prev) =>
-        prev ? { ...prev, ...updated, habit: prev.habit } : null,
-      );
+      setActivity((previous) => previous ? { ...previous, ...updated, habit: previous.habit } : null);
       setIsEditing(false);
       setIsReviewing(false);
     } catch (err) {
-      setSaveError(
-        err instanceof Error ? err.message : "Unable to update activity",
-      );
+      setSaveError(err instanceof Error ? err.message : "Unable to update activity");
     } finally {
       setIsSaving(false);
     }
@@ -188,250 +152,204 @@ function ActivityDetail({ activityId, onDeleted }: ActivityDetailProps) {
 
   async function handleDelete() {
     if (!activity) return;
-
     setIsDeleting(true);
     setDeleteError(null);
-
     try {
       await deleteActivity(activity.id);
       onDeleted?.();
     } catch (err) {
-      setDeleteError(
-        err instanceof Error ? err.message : "Unable to delete activity",
-      );
+      setDeleteError(err instanceof Error ? err.message : "Unable to delete activity");
       setIsDeleting(false);
     }
   }
 
   if (isLoading) {
-    return <p>Loading activity...</p>;
+    return (
+      <section className="activity-detail-page">
+        <div className="activity-detail-state" role="status">
+          <span className="activity-detail-spinner" />
+          <p>Loading activity...</p>
+        </div>
+      </section>
+    );
   }
 
   if (error || !activity) {
     return (
-      <section>
-        <h2>Activity detail</h2>
-        <p role="alert">{error ?? "Activity not found"}</p>
+      <section className="activity-detail-page">
+        <div className="activity-detail-error" role="alert">
+          <ActivityIcon size={22} aria-hidden="true" />
+          <div>
+            <h1>Activity unavailable</h1>
+            <p>{error ?? "Activity not found"}</p>
+          </div>
+        </div>
       </section>
     );
   }
 
-  // 1. Edit Review Sub-flow
   if (isEditing && isReviewing) {
     return (
-      <section>
-        <h2>Review updated activity</h2>
+      <section className="activity-detail-page">
+        <header className="activity-detail-header">
+          <p className="activity-detail-eyebrow">HISTORY / REVIEW</p>
+          <h1>Review changes</h1>
+          <p className="activity-detail-subtitle">Check the updated details before saving.</p>
+        </header>
 
-        <p>
-          <strong>Habit:</strong> {activity.habit.name}
-        </p>
-
-        <p>
-          <strong>Habit target:</strong> {formatTarget(activity.habit)}
-        </p>
-
-        <p>
-          <strong>New date:</strong> {editDate}
-        </p>
-
-        {activity.habit.targetType === "DURATION" ? (
-          <p>
-            <strong>New duration:</strong> {editDurationMinutes} minutes
-          </p>
-        ) : (
-          <p>
-            <strong>New value:</strong> {editValue} {editUnit}
-          </p>
-        )}
-
-        <p>
-          <strong>Source:</strong> {activity.source}
-        </p>
-
-        {saveError && <p role="alert">{saveError}</p>}
-
-        <button type="button" onClick={() => setIsReviewing(false)}>
-          Back to editing
-        </button>
-
-        <button
-          type="button"
-          onClick={handleSaveUpdate}
-          disabled={isSaving}
-        >
-          {isSaving ? "Saving..." : "Save changes"}
-        </button>
+        <div className="activity-detail-panel">
+          <div className="activity-detail-panel-heading">
+            <span className="activity-detail-icon"><ActivityIcon size={21} /></span>
+            <div>
+              <h2>{activity.habit.name}</h2>
+              <p>Target · {formatTarget(activity.habit)}</p>
+            </div>
+          </div>
+          <dl className="activity-detail-metadata">
+            <div><dt>New date</dt><dd>{formatDate(editDate)}</dd></div>
+            {activity.habit.targetType === "DURATION"
+              ? <div><dt>New duration</dt><dd>{editDurationMinutes} minutes</dd></div>
+              : <div><dt>New value</dt><dd>{editValue} {editUnit}</dd></div>}
+            <div><dt>Source</dt><dd>{activity.source}</dd></div>
+          </dl>
+          {saveError && <p className="activity-form-error" role="alert">{saveError}</p>}
+          <div className="activity-detail-actions">
+            <button type="button" className="activity-button activity-button-secondary" onClick={() => setIsReviewing(false)} disabled={isSaving}>
+              <ArrowLeft size={16} /> Back to editing
+            </button>
+            <button type="button" className="activity-button activity-button-primary" onClick={() => void handleSaveUpdate()} disabled={isSaving}>
+              <Save size={16} /> {isSaving ? "Saving..." : "Save changes"}
+            </button>
+          </div>
+        </div>
       </section>
     );
   }
 
-  // 2. Edit Form Sub-flow
   if (isEditing) {
     return (
-      <section>
-        <h2>Edit activity</h2>
+      <section className="activity-detail-page">
+        <header className="activity-detail-header">
+          <p className="activity-detail-eyebrow">HISTORY / EDIT ACTIVITY</p>
+          <h1>Edit activity</h1>
+          <p className="activity-detail-subtitle">Make a correction to your activity record.</p>
+        </header>
 
-        <p>
-          <strong>Habit:</strong> {activity.habit.name}
-        </p>
+        <div className="activity-detail-panel">
+          <div className="activity-detail-panel-heading">
+            <span className="activity-detail-icon"><ActivityIcon size={21} /></span>
+            <div>
+              <h2>{activity.habit.name}</h2>
+              <p>Target · {formatTarget(activity.habit)}</p>
+            </div>
+          </div>
 
-        <p>
-          <strong>Habit target:</strong> {formatTarget(activity.habit)}
-        </p>
+          {validationError && <p className="activity-form-error" role="alert">{validationError}</p>}
 
-        {validationError && <p role="alert">{validationError}</p>}
+          <form className="activity-edit-form" onSubmit={handleReview}>
+            <div className="activity-form-field">
+              <label htmlFor="edit-activity-date">Activity date</label>
+              <input id="edit-activity-date" type="date" value={editDate} onChange={(event) => { setEditDate(event.target.value); setValidationError(null); }} required />
+            </div>
 
-        <form onSubmit={handleReview}>
-          <label htmlFor="edit-activity-date">Date</label>
-          <input
-            id="edit-activity-date"
-            type="date"
-            value={editDate}
-            onChange={(e) => {
-              setEditDate(e.target.value);
-              setValidationError(null);
-            }}
-          />
+            {activity.habit.targetType === "DURATION" ? (
+              <div className="activity-form-field">
+                <label htmlFor="edit-activity-duration">Actual duration (minutes)</label>
+                <input id="edit-activity-duration" type="number" min="1" step="1" value={editDurationMinutes} onChange={(event) => { setEditDurationMinutes(event.target.value); setValidationError(null); }} required />
+              </div>
+            ) : (
+              <>
+                <div className="activity-form-field">
+                  <label htmlFor="edit-activity-value">Actual value</label>
+                  <input id="edit-activity-value" type="number" min="0.01" step="any" value={editValue} onChange={(event) => { setEditValue(event.target.value); setValidationError(null); }} required />
+                </div>
+                <div className="activity-form-field">
+                  <label htmlFor="edit-activity-unit">Unit</label>
+                  <input id="edit-activity-unit" type="text" value={editUnit} readOnly disabled />
+                </div>
+              </>
+            )}
 
-          {activity.habit.targetType === "DURATION" ? (
-            <>
-              <label htmlFor="edit-activity-duration">
-                Actual duration (minutes)
-              </label>
-              <input
-                id="edit-activity-duration"
-                type="number"
-                min="1"
-                step="1"
-                value={editDurationMinutes}
-                onChange={(e) => {
-                  setEditDurationMinutes(e.target.value);
-                  setValidationError(null);
-                }}
-              />
-            </>
-          ) : (
-            <>
-              <label htmlFor="edit-activity-value">Actual value</label>
-              <input
-                id="edit-activity-value"
-                type="number"
-                min="0.01"
-                step="any"
-                value={editValue}
-                onChange={(e) => {
-                  setEditValue(e.target.value);
-                  setValidationError(null);
-                }}
-              />
-
-              <label htmlFor="edit-activity-unit">Unit</label>
-              <input
-                id="edit-activity-unit"
-                type="text"
-                value={editUnit}
-                readOnly
-                disabled
-              />
-            </>
-          )}
-
-          <button type="submit">Review changes</button>
-
-          <button type="button" onClick={cancelEditing}>
-            Cancel
-          </button>
-        </form>
+            <div className="activity-detail-actions">
+              <button type="submit" className="activity-button activity-button-primary"><Pencil size={16} /> Review changes</button>
+              <button type="button" className="activity-button activity-button-secondary" onClick={cancelEditing}><X size={16} /> Cancel</button>
+            </div>
+          </form>
+        </div>
       </section>
     );
   }
 
-  // 3. Normal Detail View
   return (
-    <section>
-      <h2>Activity detail</h2>
+    <section className="activity-detail-page">
+      <header className="activity-detail-header">
+        <p className="activity-detail-eyebrow">YOUR HISTORY</p>
+        <h1>Activity details</h1>
+        <p className="activity-detail-subtitle">A record of the work you put in, one session at a time.</p>
+      </header>
 
-      <p>
-        <strong>Habit:</strong> {activity.habit.name}
-      </p>
-
-      {activity.habit.description && (
-        <p>
-          <strong>Description:</strong> {activity.habit.description}
-        </p>
-      )}
-
-      <p>
-        <strong>Habit target:</strong> {formatTarget(activity.habit)}
-      </p>
-
-      <p>
-        <strong>Date:</strong> {activity.activityDate}
-      </p>
-
-      <p>
-        <strong>Source:</strong> {activity.source}
-      </p>
-
-      {activity.durationSeconds !== null && (
-        <p>
-          <strong>Duration:</strong> {formatDuration(activity.durationSeconds)}
-        </p>
-      )}
-
-      {activity.value !== null && (
-        <p>
-          <strong>Value:</strong> {activity.value} {activity.unit ?? ""}
-        </p>
-      )}
-
-      <p>
-        <strong>Started:</strong> {formatDateTime(activity.startedAt)}
-      </p>
-
-      <p>
-        <strong>Ended:</strong> {formatDateTime(activity.endedAt)}
-      </p>
-
-      {!showDeleteConfirm ? (
-        <div>
-          <button type="button" onClick={startEditing}>
-            Edit
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setDeleteError(null);
-              setShowDeleteConfirm(true);
-            }}
-          >
-            Delete
-          </button>
+      <article className="activity-detail-panel">
+        <div className="activity-detail-panel-heading">
+          <span className="activity-detail-icon"><ActivityIcon size={21} aria-hidden="true" /></span>
+          <div className="activity-detail-habit-heading">
+            <p className="activity-detail-kicker">HABIT</p>
+            <h2>{activity.habit.name}</h2>
+            {activity.habit.description && <p className="activity-detail-description">{activity.habit.description}</p>}
+          </div>
+          <span className="activity-source-badge">{activity.source === "MANUAL" ? "Manual entry" : "Timer session"}</span>
         </div>
-      ) : (
-        <div>
-          <p>Are you sure you want to delete this activity?</p>
 
-          {deleteError && <p role="alert">{deleteError}</p>}
-
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            {isDeleting ? "Deleting..." : "Confirm delete"}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowDeleteConfirm(false)}
-            disabled={isDeleting}
-          >
-            Cancel
-          </button>
+        <div className="activity-detail-target">
+          <span>Habit target</span>
+          <strong>{formatTarget(activity.habit)}</strong>
         </div>
-      )}
+
+        <dl className="activity-detail-metadata">
+          <div>
+            <dt><CalendarDays size={15} aria-hidden="true" /> Date</dt>
+            <dd>{formatDate(activity.activityDate)}</dd>
+          </div>
+          {activity.durationSeconds !== null && (
+            <div>
+              <dt><Clock3 size={15} aria-hidden="true" /> Duration</dt>
+              <dd>{formatDuration(activity.durationSeconds)}</dd>
+            </div>
+          )}
+          {activity.value !== null && (
+            <div>
+              <dt>Actual value</dt>
+              <dd>{activity.value} {activity.unit ?? ""}</dd>
+            </div>
+          )}
+          <div><dt>Started</dt><dd>{formatDateTime(activity.startedAt)}</dd></div>
+          <div><dt>Ended</dt><dd>{formatDateTime(activity.endedAt)}</dd></div>
+        </dl>
+
+        {showDeleteConfirm ? (
+          <div className="activity-delete-confirm" role="group" aria-label="Confirm activity deletion">
+            <div>
+              <h3>Delete this activity?</h3>
+              <p>This removes this activity record. This action cannot be undone.</p>
+            </div>
+            {deleteError && <p className="activity-form-error" role="alert">{deleteError}</p>}
+            <div className="activity-detail-actions">
+              <button type="button" className="activity-button activity-button-danger" onClick={() => void handleDelete()} disabled={isDeleting}>
+                <Trash2 size={16} /> {isDeleting ? "Deleting..." : "Confirm delete"}
+              </button>
+              <button type="button" className="activity-button activity-button-secondary" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <div className="activity-detail-actions activity-detail-footer">
+            <button type="button" className="activity-button activity-button-secondary" onClick={startEditing}>
+              <Pencil size={16} /> Edit activity
+            </button>
+            <button type="button" className="activity-button activity-button-danger-ghost" onClick={() => { setDeleteError(null); setShowDeleteConfirm(true); }}>
+              <Trash2 size={16} /> Delete
+            </button>
+          </div>
+        )}
+      </article>
     </section>
   );
 }

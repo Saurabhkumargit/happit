@@ -1,30 +1,85 @@
 /* =========================================================
+
    Habit List
+
    ========================================================= */
 
 .habit-list-page {
   width: 100%;
+
   max-width: 1180px;
+
   margin: 0 auto;
+
   padding-bottom: var(--space-12);
 }
 
 /* =========================================================
+
    Header
+
    ========================================================= */
 
 .habit-list-page .page-header {
   margin-bottom: 32px;
 }
 
+.view-archived-link {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 10px 13px;
+
+  border: 1px solid #302b39;
+
+  border-radius: 9px;
+
+  background: #141218;
+
+  color: #b8a4f8;
+
+  font-size: 13px;
+
+  font-weight: 500;
+
+  text-decoration: none;
+
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+*.view-archived-link:hover* {
+  border-color: #514263;
+
+  background: #1a1622;
+
+  color: #d0bfff;
+}
+
+*.view-archived-link:focus-visible* {
+  outline: 2px solid #a78bfa;
+
+  outline-offset: 3px;
+}
+
 /* =========================================================
+
    Loading / Error
+
    ========================================================= */
 
 .habit-list-loading {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   min-height: 320px;
 }
 
@@ -33,16 +88,22 @@
 }
 
 /* =========================================================
+
    Habit list
+
    ========================================================= */
 
 .habit-list {
   display: flex;
+
   flex-direction: column;
+
   gap: 0;
 
   list-style: none;
+
   padding: 0;
+
   margin: 0;
 
   border-top: 1px solid var(--color-border);
@@ -52,27 +113,45 @@
   margin: 0;
 }
 
+.habit-card-wrapper {
+  position: relative;
+}
+
+*.habit-card-wrapper.habit-card-menu-open* {
+  z-index: 100;
+}
+
+.habit-card-menu-open .habit-card {
+  z-index: 100;
+}
+
 /* =========================================================
+
    Habit row
+
    ========================================================= */
 
 .habit-card {
   position: relative;
 
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 32px;
+  overflow: visible;
 
   min-height: 124px;
+
   padding: 22px 4px 22px 0;
 
   background: transparent;
+
   border: 0;
+
   border-bottom: 1px solid var(--color-border);
+
   border-radius: 0;
 
   cursor: grab;
+
   touch-action: none;
+
   user-select: none;
 
   transition:
@@ -81,35 +160,46 @@
 }
 
 /*
+
  * A very subtle hover surface.
+
  * No gradients, glow or floating-card effect.
+
  */
-.habit-card:hover {
+
+*.habit-card:hover* {
   background: rgb(255 255 255 / 1.5%);
 }
 
-.habit-card:active {
+*.habit-card:active* {
   cursor: grabbing;
 }
 
 /* Remove the old decorative glow completely. */
-.habit-card::before {
+
+*.habit-card::before* {
   display: none;
 }
 
 /* Keep children above the row surface. */
+
 .habit-card > * {
   position: relative;
+
   z-index: 1;
 }
 
 /* =========================================================
+
    Drag states
+
    ========================================================= */
 
 .habit-card-dragging {
   opacity: 0.72;
+
   border-bottom-color: var(--color-primary);
+
   background: var(--color-primary-soft, rgb(167 139 250 / 4%));
 }
 
@@ -118,41 +208,66 @@
 }
 
 /* =========================================================
-   Main content
+
+   Card layout
+
    ========================================================= */
 
-.habit-card-content {
-  min-width: 0;
+.habit-card-layout {
+  display: grid;
 
+  grid-template-columns: minmax(0, 1fr) max-content;
+
+  align-items: stretch;
+
+  column-gap: 24px;
+
+  width: 100%;
+
+  min-width: 0;
+}
+
+.habit-card-content {
   display: flex;
+
   flex-direction: column;
-  justify-content: space-between;
+
   gap: 20px;
+
+  min-width: 0;
 }
 
 /* =========================================================
+
    Habit heading
+
    ========================================================= */
 
 .habit-heading-row {
   display: flex;
+
   align-items: flex-start;
+
   gap: 14px;
 
   min-width: 0;
 }
 
 /* =========================================================
+
    Habit icon
+
    ========================================================= */
 
 .habit-icon {
   flex: 0 0 auto;
 
   width: 40px;
+
   height: 40px;
 
   display: grid;
+
   place-items: center;
 
   margin-top: 1px;
@@ -160,7 +275,9 @@
   border-radius: 10px;
 
   color: var(--color-primary);
+
   background: var(--color-primary-soft, rgb(167 139 250 / 8%));
+
   border: 1px solid var(--color-primary-border, rgb(167 139 250 / 18%));
 
   transition:
@@ -169,23 +286,35 @@
     border-color 140ms ease;
 }
 
-.habit-card:hover .habit-icon {
+*.habit-card:hover* .habit-icon {
   color: var(--color-primary-hover, #b8a3ff);
+
   background: rgb(167 139 250 / 11%);
+
   border-color: rgb(167 139 250 / 25%);
 }
 
 /* =========================================================
+
    Habit name
+
    ========================================================= */
 
 .habit-name-button {
-  width: fit-content;
+  display: block;
+
+  flex: 1 1 0;
+
+  min-width: 0;
+
+  width: 100%;
+
   max-width: 100%;
 
   padding: 0;
 
   border: 0;
+
   background: transparent;
 
   text-align: left;
@@ -197,13 +326,15 @@
   opacity: 0.82;
 }
 
-.habit-name-button:focus-visible {
+*.habit-name-button:focus-visible* {
   outline: 2px solid var(--color-primary);
+
   outline-offset: 5px;
+
   border-radius: 3px;
 }
 
-.habit-name-button:disabled {
+*.habit-name-button:disabled* {
   cursor: default;
 }
 
@@ -213,7 +344,9 @@
   color: var(--color-text);
 
   font-size: 17px;
+
   font-weight: 600;
+
   line-height: 1.35;
 
   letter-spacing: -0.015em;
@@ -227,16 +360,25 @@
   color: var(--color-text-secondary);
 
   font-size: 13px;
+
   line-height: 1.5;
+
+  overflow-wrap: break-word;
+
+  word-break: normal;
 }
 
 /* =========================================================
+
    Metadata
+
    ========================================================= */
 
 .habit-meta {
   display: flex;
+
   align-items: flex-end;
+
   gap: 36px;
 
   padding-left: 54px;
@@ -244,7 +386,9 @@
 
 .habit-meta-item {
   display: flex;
+
   flex-direction: column;
+
   gap: 5px;
 }
 
@@ -252,10 +396,13 @@
   color: var(--color-text-muted);
 
   font-size: 9px;
+
   font-weight: 700;
+
   line-height: 1;
 
   letter-spacing: 0.11em;
+
   text-transform: uppercase;
 }
 
@@ -265,94 +412,103 @@
   font-family: var(--font-mono);
 
   font-size: 12px;
+
   font-weight: 500;
 
   line-height: 1.3;
 }
 
 /* =========================================================
+
    Right side actions
+
    ========================================================= */
 
 .habit-card-actions {
-  position: relative;
-
   display: flex;
+
   flex-direction: column;
+
   align-items: flex-end;
+
   justify-content: space-between;
 
-  min-width: 88px;
-  flex-shrink: 0;
+  align-self: stretch;
+
+  min-width: max-content;
+
+  gap: 16px;
+
+  margin: 0;
 }
 
 /* =========================================================
+
    More menu
+
    ========================================================= */
+
+.habit-menu-container {
+  position: relative;
+
+  flex-shrink: 0;
+}
 
 .habit-menu-button {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   width: 32px;
+
   height: 32px;
 
-  padding: 0;
+  border: 1px solid var(--border-subtle, #302936);
 
-  border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: 8px;
 
-  background: transparent;
-  color: var(--color-text-muted);
+  background: var(--surface-raised, #19151f);
+
+  color: var(--text-secondary, #a79caf);
 
   cursor: pointer;
 
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
+    border-color 140ms ease,
+    color 140ms ease;
 }
 
-.habit-menu-button:hover {
-  background: rgb(255 255 255 / 4%);
-  border-color: var(--color-border);
-  color: var(--color-text);
-}
-
+*.habit-menu-button:hover*,
 .habit-menu-button[aria-expanded="true"] {
-  background: rgb(167 139 250 / 8%);
-  border-color: rgb(167 139 250 / 20%);
-  color: var(--color-primary);
-}
+  border-color: #654995;
 
-.habit-menu-button:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  color: #b49aff;
 }
-
-/* =========================================================
-   Reorder menu
-   ========================================================= */
 
 .habit-menu {
   position: absolute;
-  top: 38px;
+
+  top: calc(100% + 8px);
+
   right: 0;
 
-  min-width: 148px;
-
-  padding: 5px;
-
-  background: var(--color-surface-elevated);
-  border: 1px solid var(--color-border-strong);
-  border-radius: 9px;
-
-  box-shadow: 0 14px 35px rgb(0 0 0 / 35%);
+  left: auto;
 
   z-index: 50;
 
-  overflow: hidden;
+  min-width: 150px;
+
+  padding: 4px;
+
+  border: 1px solid var(--border-subtle, #302936);
+
+  border-radius: 8px;
+
+  background: #19151f;
+
+  box-shadow: 0 10px 26px rgb(0 0 0 / 45%);
 }
 
 .habit-menu-item {
@@ -360,16 +516,21 @@
 
   width: 100%;
 
-  padding: 9px 11px;
+  padding: 7px 11px;
 
   border: 0;
+
   border-radius: 6px;
 
   background: transparent;
-  color: var(--color-text);
+
+  color: var(--text-primary, #f5f0fa);
 
   font-size: 13px;
+
   font-weight: 500;
+
+  line-height: 1.4;
 
   text-align: left;
 
@@ -381,27 +542,23 @@
 }
 
 .habit-menu-item:hover:not(:disabled) {
-  background: rgb(167 139 250 / 8%);
-  color: var(--color-primary);
+  background: #292132;
+  color: #d8c7ff;
 }
 
-.habit-menu-item:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
-}
-
-.habit-menu-item:disabled {
+*.habit-menu-item:disabled* {
   opacity: 0.35;
+
   cursor: not-allowed;
 }
 
 /* =========================================================
+
    Archive
+
    ========================================================= */
 
 .habit-archive-button {
-  margin-top: auto;
-
   min-height: 30px;
 
   color: var(--color-text-muted);
@@ -421,16 +578,20 @@
 }
 
 /* =========================================================
+
    Screen reader only
+
    ========================================================= */
 
 .sr-only {
   position: absolute;
 
   width: 1px;
+
   height: 1px;
 
   padding: 0;
+
   margin: -1px;
 
   overflow: hidden;
@@ -443,7 +604,9 @@
 }
 
 /* =========================================================
+
    Tablet
+
    ========================================================= */
 
 @media (max-width: 900px) {
@@ -453,7 +616,10 @@
 
   .habit-card {
     padding: 20px 2px;
-    gap: 24px;
+  }
+
+  .habit-card-layout {
+    column-gap: 20px;
   }
 
   .habit-meta {
@@ -462,77 +628,160 @@
 }
 
 /* =========================================================
+
    Mobile
+
    ========================================================= */
 
 @media (max-width: 640px) {
-  .habit-list {
-    border-top: 1px solid var(--color-border);
-  }
-
   .habit-card {
-    grid-template-columns: 1fr;
-
     min-height: 0;
 
     padding: 18px 0;
+  }
 
-    gap: 16px;
+  .habit-card-layout {
+    grid-template-columns: minmax(0, 1fr) max-content;
+
+    column-gap: 12px;
+
+    align-items: stretch;
   }
 
   .habit-card-content {
-    gap: 18px;
+    gap: 16px;
+
+    min-width: 0;
   }
 
   .habit-heading-row {
+    display: flex;
+
+    align-items: flex-start;
+
     gap: 12px;
+
+    min-width: 0;
   }
 
   .habit-icon {
+    flex: 0 0 38px;
+
     width: 38px;
+
     height: 38px;
 
     border-radius: 9px;
   }
 
+  .habit-name-button {
+    display: block;
+    flex: 1 1 0;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
   .habit-name {
     font-size: 16px;
+    overflow-wrap: anywhere;
   }
 
   .habit-description {
+    max-width: 100%;
+
     font-size: 13px;
+
+    overflow-wrap: break-word;
+
+    word-break: normal;
   }
 
   .habit-meta {
-    gap: 24px;
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: flex-start;
+
+    gap: 20px 24px;
+
     padding-left: 50px;
+
+    min-width: 0;
+  }
+
+  .habit-meta-item {
+    min-width: 0;
   }
 
   .habit-meta-value {
     font-size: 11px;
+
+    overflow-wrap: anywhere;
   }
 
   .habit-card-actions {
-    flex-direction: row;
-    align-items: center;
+    display: flex;
 
-    width: 100%;
+    flex-direction: column;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+
+    align-self: stretch;
+
+    min-width: max-content;
+
+    gap: 12px;
+  }
+
+  .habit-menu-container {
+    align-self: flex-end;
+  }
+
+  .habit-menu {
+    top: calc(100% + 8px);
+
+    right: 0;
+
+    left: auto;
+  }
+
+  .habit-archive-button {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .habit-card-layout {
+    column-gap: 8px;
+  }
+
+  .habit-heading-row {
+    gap: 9px;
+  }
+
+  .habit-meta {
+    gap: 16px;
+
+    padding-left: 47px;
+  }
+
+  .habit-card-actions {
     min-width: 0;
   }
 
   .habit-archive-button {
-    margin-top: 0;
-  }
-
-  .habit-menu {
-    top: 38px;
-    left: 0;
-    right: auto;
+    padding-inline: 6px;
   }
 }
 
 /* =========================================================
+
    Reduced motion
+
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
@@ -546,11 +795,14 @@
 }
 
 /* =========================================================
+
    Catalog link
+
    ========================================================= */
 
 .habit-list-catalog-link {
   display: flex;
+
   justify-content: center;
 
   padding: 28px 0 8px;
@@ -558,19 +810,25 @@
 
 .habit-list-catalog-link a {
   display: inline-flex;
+
   align-items: center;
+
   gap: 9px;
 
   padding: 9px 13px;
 
   border: 1px solid var(--color-border);
+
   border-radius: 7px;
 
   background: transparent;
+
   color: var(--color-text-secondary);
 
   font-size: 12px;
+
   font-weight: 600;
+
   text-decoration: none;
 
   transition:
@@ -579,20 +837,25 @@
     border-color 130ms ease;
 }
 
-.habit-list-catalog-link a:hover {
+.habit-list-catalog-link a*:hover* {
   color: var(--color-primary);
+
   background: var(--color-primary-soft);
+
   border-color: var(--color-primary-border);
 }
 
-.habit-list-catalog-link a span:last-child {
+.habit-list-catalog-link a span*:last-child* {
   color: var(--color-primary);
+
   font-size: 15px;
+
   line-height: 1;
 }
 
-.habit-list-catalog-link a:focus-visible {
+.habit-list-catalog-link a*:focus-visible* {
   outline: 2px solid var(--color-primary);
+
   outline-offset: 3px;
 }
 

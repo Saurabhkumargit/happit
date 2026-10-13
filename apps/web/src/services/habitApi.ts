@@ -16,7 +16,8 @@ export type CatalogHabitStatus =
 
 export type UserHabitStatus =
   | "ACTIVE"
-  | "ARCHIVED";
+  | "ARCHIVED"
+  | "REMOVED";
 
 export interface HabitScheduleConfig {
   weekdays?: number[];
@@ -145,7 +146,7 @@ export async function restoreHabit(habitId: string) {
   return response.habit;
 }
 
-export async function deleteHabit(habitId: string) {
+export async function removeHabit(habitId: string) {
   return apiRequest<void>(
     `/api/v1/habits/${habitId}`,
     {

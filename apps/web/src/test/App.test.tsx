@@ -81,7 +81,7 @@ describe("App authentication", () => {
     render(<App />);
 
     expect(
-      await screen.findByRole("heading", { name: "Happit" }),
+      await screen.findByRole("heading", { name: "Log in" }),
     ).toBeInTheDocument();
 
     expect(
@@ -107,10 +107,6 @@ describe("App authentication", () => {
 
     expect(
       screen.getByRole("button", { name: "Log out" }),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole("button", { name: "Delete account" }),
     ).toBeInTheDocument();
   });
 
@@ -141,60 +137,6 @@ describe("App authentication", () => {
     ).toBeInTheDocument();
 
     expect(api.logout).toHaveBeenCalledTimes(1);
-  });
-
-  it("returns to the login screen after account deletion", async () => {
-    const user = {
-      id: "user-123",
-      email: "test@example.com",
-      createdAt: "2026-09-07T00:00:00.000Z",
-    };
-
-    vi.mocked(api.getCurrentUser).mockResolvedValue({ user });
-    vi.mocked(api.deleteAccount).mockResolvedValue(undefined);
-
-    vi.spyOn(window, "confirm").mockReturnValue(true);
-
-    render(<App />);
-
-    const emails = await screen.findAllByText("test@example.com");
-    expect(emails.length).toBeGreaterThan(0);
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "Delete account" }),
-    );
-
-    expect(api.deleteAccount).toHaveBeenCalledTimes(1);
-
-    expect(
-      await screen.findByRole("button", { name: "Log in" }),
-    ).toBeInTheDocument();
-  });
-
-  it("does not delete the account when deletion is cancelled", async () => {
-    const user = {
-      id: "user-123",
-      email: "test@example.com",
-      createdAt: "2026-09-07T00:00:00.000Z",
-    };
-
-    vi.mocked(api.getCurrentUser).mockResolvedValue({ user });
-    vi.spyOn(window, "confirm").mockReturnValue(false);
-
-    render(<App />);
-
-    const emails = await screen.findAllByText("test@example.com");
-    expect(emails.length).toBeGreaterThan(0);
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "Delete account" }),
-    );
-
-    expect(api.deleteAccount).not.toHaveBeenCalled();
-
-    expect(
-      screen.getAllByText("test@example.com").length,
-    ).toBeGreaterThan(0);
   });
 
   it("returns to the login screen when another tab logs out", async () => {

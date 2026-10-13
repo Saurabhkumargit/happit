@@ -80,10 +80,14 @@ describe("DELETE /api/v1/habits/:habitId", () => {
       .delete(`/api/v1/habits/${exerciseId}`)
       .expect(204);
 
-    await agent
+    // After removal, the habit should be marked as REMOVED
+    const habitResponse = await agent
       .get(`/api/v1/habits/${exerciseId}`)
-      .expect(404);
+      .expect(200);
 
+    expect(habitResponse.body.habit.status).toBe("REMOVED");
+
+    // But it should not appear in the user's habit list
     const response = await agent
       .get("/api/v1/habits")
       .expect(200);

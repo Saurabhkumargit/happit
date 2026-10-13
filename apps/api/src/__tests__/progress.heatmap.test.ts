@@ -32,6 +32,7 @@ describe("progress heatmap", () => {
         actualValue: 30,
         targetValue: 30,
         completionPercentage: 100,
+        intensity: 1,
       },
       {
         date: "2026-09-02",
@@ -39,6 +40,7 @@ describe("progress heatmap", () => {
         actualValue: 15,
         targetValue: 30,
         completionPercentage: 50,
+        intensity: 0.5,
       },
       {
         date: "2026-09-03",
@@ -46,6 +48,7 @@ describe("progress heatmap", () => {
         actualValue: 0,
         targetValue: 30,
         completionPercentage: 0,
+        intensity: 0,
       },
     ]);
   });
@@ -61,6 +64,7 @@ describe("progress heatmap", () => {
       actualValue: 45,
       targetValue: 30,
       completionPercentage: 150,
+      intensity: 1,
     });
   });
 
@@ -83,6 +87,7 @@ describe("progress heatmap", () => {
         actualValue: 30,
         targetValue: 30,
         completionPercentage: 100,
+        intensity: 1,
       },
       {
         date: "2026-09-02",
@@ -90,6 +95,7 @@ describe("progress heatmap", () => {
         actualValue: 15,
         targetValue: 30,
         completionPercentage: 50,
+        intensity: 0.5,
       },
       {
         date: "2026-09-03",
@@ -97,6 +103,7 @@ describe("progress heatmap", () => {
         actualValue: 0,
         targetValue: 30,
         completionPercentage: 0,
+        intensity: 0,
       },
       {
         date: "2026-09-04",
@@ -104,6 +111,7 @@ describe("progress heatmap", () => {
         actualValue: 0,
         targetValue: 30,
         completionPercentage: 0,
+        intensity: 0,
       },
     ]);
   });

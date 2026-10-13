@@ -35,6 +35,7 @@ export const habitStatusEnum = pgEnum("habit_status", [
 export const userHabitStatusEnum = pgEnum("user_habit_status", [
   "ACTIVE",
   "ARCHIVED",
+  "REMOVED",
 ]);
 
 export const activitySourceEnum = pgEnum("activity_source", [
@@ -162,12 +163,14 @@ export const userHabits = pgTable(
     archivedAt: timestamp("archived_at", {
       withTimezone: true,
     }),
+    removedAt: timestamp("removed_at", {
+      withTimezone: true,
+    }),
   },
   (table) => ({
-    userHabitUniqueIndex: uniqueIndex("user_habits_user_habit_unique").on(
-      table.userId,
-      table.habitId,
-    ),
+    userHabitUniqueIndex: uniqueIndex("user_habits_user_habit_unique")
+      .on(table.userId, table.habitId)
+      .where(sql`${table.status} != 'REMOVED'`),
     userStatusIndex: index("user_habits_user_status_idx").on(
       table.userId,
       table.status,

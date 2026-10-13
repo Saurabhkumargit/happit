@@ -3,20 +3,20 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import ArchivedHabitList from "../components/habits/ArchivedHabitList";
 import {
-  deleteHabit,
+  removeHabit,
   getHabits,
   restoreHabit,
 } from "../services/habitApi";
 
 vi.mock("../services/habitApi", () => ({
-  deleteHabit: vi.fn(),
+  removeHabit: vi.fn(),
   getHabits: vi.fn(),
   restoreHabit: vi.fn(),
 }));
 
 const mockedGetHabits = vi.mocked(getHabits);
 const mockedRestoreHabit = vi.mocked(restoreHabit);
-const mockedDeleteHabit = vi.mocked(deleteHabit);
+const mockedRemoveHabit = vi.mocked(removeHabit);
 
 const archivedHabit = {
   id: "user-habit-1",
@@ -113,94 +113,41 @@ describe("ArchivedHabitList", () => {
     ).toHaveTextContent("Unable to restore habit");
   });
 
-  it("shows a confirmation before deleting a habit", async () => {
-  mockedGetHabits.mockResolvedValue([archivedHabit]);
+  it("removes a habit without confirmation", async () => {
+    mockedGetHabits.mockResolvedValue([archivedHabit]);
+    mockedRemoveHabit.mockResolvedValue();
 
-  const confirmSpy = vi
-    .spyOn(window, "confirm")
-    .mockReturnValue(false);
+    render(<ArchivedHabitList />);
 
-  render(<ArchivedHabitList />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Remove" }),
+    );
 
-  fireEvent.click(
-    await screen.findByRole("button", { name: "Delete" }),
-  );
+    await waitFor(() => {
+      expect(mockedRemoveHabit).toHaveBeenCalledWith("habit-1");
+    });
 
-  expect(confirmSpy).toHaveBeenCalledWith(
-    "Are you sure you want to permanently delete this habit?",
-  );
-
-  expect(mockedDeleteHabit).not.toHaveBeenCalled();
-
-  confirmSpy.mockRestore();
-});
-
-it("does not delete when confirmation is cancelled", async () => {
-  mockedGetHabits.mockResolvedValue([archivedHabit]);
-
-  const confirmSpy = vi
-    .spyOn(window, "confirm")
-    .mockReturnValue(false);
-
-  render(<ArchivedHabitList />);
-
-  fireEvent.click(
-    await screen.findByRole("button", { name: "Delete" }),
-  );
-
-  expect(mockedDeleteHabit).not.toHaveBeenCalled();
-  expect(screen.getByRole("heading", { name: "Reading" })).toBeInTheDocument();
-
-  confirmSpy.mockRestore();
-});
-
-it("deletes a habit after confirmation", async () => {
-  mockedGetHabits.mockResolvedValue([archivedHabit]);
-  mockedDeleteHabit.mockResolvedValue();
-
-  const confirmSpy = vi
-    .spyOn(window, "confirm")
-    .mockReturnValue(true);
-
-  render(<ArchivedHabitList />);
-
-  fireEvent.click(
-    await screen.findByRole("button", { name: "Delete" }),
-  );
-
-  await waitFor(() => {
-    expect(mockedDeleteHabit).toHaveBeenCalledWith("habit-1");
+    await waitFor(() => {
+      expect(
+        screen.getByText("You don't have any archived habits."),
+      ).toBeInTheDocument();
+    });
   });
 
-  await waitFor(() => {
+  it("shows an error when removal fails", async () => {
+    mockedGetHabits.mockResolvedValue([archivedHabit]);
+    mockedRemoveHabit.mockRejectedValue(
+      new Error("Unable to remove habit"),
+    );
+
+    render(<ArchivedHabitList />);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Remove" }),
+    );
+
     expect(
-      screen.getByText("You don't have any archived habits."),
-    ).toBeInTheDocument();
+      await screen.findByRole("alert"),
+    ).toHaveTextContent("Unable to remove habit");
   });
-
-  confirmSpy.mockRestore();
-});
-
-it("shows an error when deletion fails", async () => {
-  mockedGetHabits.mockResolvedValue([archivedHabit]);
-  mockedDeleteHabit.mockRejectedValue(
-    new Error("Unable to delete habit"),
-  );
-
-  const confirmSpy = vi
-    .spyOn(window, "confirm")
-    .mockReturnValue(true);
-
-  render(<ArchivedHabitList />);
-
-  fireEvent.click(
-    await screen.findByRole("button", { name: "Delete" }),
-  );
-
-  expect(
-    await screen.findByRole("alert"),
-  ).toHaveTextContent("Unable to delete habit");
-
-  confirmSpy.mockRestore();
-});
 });

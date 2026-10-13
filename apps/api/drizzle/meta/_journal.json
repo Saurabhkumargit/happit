@@ -64,6 +64,20 @@
       "when": 1789398021832,
       "tag": "0008_sudden_mandrill",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791898889173,
+      "tag": "0009_nosy_mongoose",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791898889174,
+      "tag": "0010_add_removed_constraints",
+      "breakpoints": true
     }
   ]
 }

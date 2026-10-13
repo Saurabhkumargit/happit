@@ -60,14 +60,6 @@ export function evaluateCompletion(
     };
   }
 
-//   console.log("COMPLETION DEBUG", {
-//   date,
-//   actualValue,
-//   targetValue: target.targetValue,
-//   state,
-//   result: actualValue >= target.targetValue ? "COMPLETED" : "INCOMPLETE",
-// });
-
   return {
     date,
     state:

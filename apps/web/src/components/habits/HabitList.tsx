@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+
 import {
   Activity,
   Archive,
@@ -10,6 +11,7 @@ import {
   Moon,
   Sparkles,
 } from "lucide-react";
+
 import { useNavigate, Link } from "react-router-dom";
 
 import {
@@ -20,10 +22,15 @@ import {
 } from "../../services/habitApi";
 
 import PageHeader from "../ui/PageHeader";
+
 import Button from "../ui/Button";
+
 import LoadingSpinner from "../ui/LoadingSpinner";
+
 import ErrorState from "../ui/ErrorState";
+
 import EmptyState from "../ui/EmptyState";
+
 import { TiltCard } from "../ui/TiltCard";
 
 import "./HabitList.css";
@@ -36,8 +43,10 @@ function formatSchedule(habit: UserHabit["habit"]) {
   switch (habit.scheduleType) {
     case "DAILY":
       return "Every day";
+
     case "WEEKDAYS":
       return `Weekdays: ${(habit.scheduleConfig.weekdays ?? []).join(", ")}`;
+
     case "WEEKLY_TARGET":
       return `${habit.scheduleConfig.occurrences ?? 0}× weekly`;
   }
@@ -45,11 +54,13 @@ function formatSchedule(habit: UserHabit["habit"]) {
 
 function formatTarget(habit: UserHabit["habit"]) {
   const unit = habit.targetUnit ? ` ${habit.targetUnit}` : "";
+
   return `${habit.targetValue}${unit}`;
 }
 
 function getHabitIcon(habit: UserHabit["habit"]) {
   const key = habit.key.toLowerCase();
+
   const name = habit.name.toLowerCase();
 
   if (
@@ -86,27 +97,40 @@ function getHabitIcon(habit: UserHabit["habit"]) {
 
 function HabitList({ onSelectHabit }: HabitListProps) {
   const navigate = useNavigate();
+
   const [habits, setHabits] = useState<UserHabit[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
+
   const [loadError, setLoadError] = useState<string | null>(null);
+
   const [error, setError] = useState<string | null>(null);
+
   const [archivingHabitId, setArchivingHabitId] = useState<string | null>(null);
 
   // Long-press drag state
+
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   const [isReordering, setIsReordering] = useState(false);
+
   const [showReorderMenu, setShowReorderMenu] = useState<number | null>(null);
 
   const longPressTimerRef = useRef<number | null>(null);
+
   const dragStartPosRef = useRef({ x: 0, y: 0 });
+
   const isDraggingRef = useRef(false);
 
   useEffect(() => {
     async function loadHabits() {
       try {
         setError(null);
+
         const result = await getHabits();
+
         setHabits(result.filter((habit) => habit.status === "ACTIVE"));
       } catch (error) {
         setLoadError(
@@ -120,9 +144,38 @@ function HabitList({ onSelectHabit }: HabitListProps) {
     loadHabits();
   }, []);
 
+  useEffect(() => {
+    if (showReorderMenu === null) return;
+
+    function handlePointerDownOutside(e: PointerEvent) {
+      const target = e.target as HTMLElement | null;
+
+      if (!target?.closest(".habit-menu-container")) {
+        setShowReorderMenu(null);
+      }
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowReorderMenu(null);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDownOutside);
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDownOutside);
+
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showReorderMenu]);
+
   async function handleArchive(habitId: string) {
     try {
       setError(null);
+
       setArchivingHabitId(habitId);
 
       await archiveHabit(habitId);
@@ -142,15 +195,20 @@ function HabitList({ onSelectHabit }: HabitListProps) {
   const commitReorder = useCallback(
     async (newHabits: UserHabit[]) => {
       const previousHabits = habits;
+
       setHabits(newHabits);
+
       setError(null);
+
       setIsReordering(true);
 
       try {
         // Send canonical habit IDs in the new order
+
         await reorderHabits(newHabits.map((habit) => habit.habitId));
       } catch (error) {
         setHabits(previousHabits);
+
         setError(
           error instanceof Error ? error.message : "Unable to reorder habits",
         );
@@ -158,23 +216,29 @@ function HabitList({ onSelectHabit }: HabitListProps) {
         setIsReordering(false);
       }
     },
+
     [habits],
   );
 
   // Long-press drag handlers
+
   const handlePointerDown = useCallback(
     (e: React.PointerEvent, index: number) => {
       if (isReordering) return;
 
       e.preventDefault();
+
       dragStartPosRef.current = { x: e.clientX, y: e.clientY };
 
       longPressTimerRef.current = window.setTimeout(() => {
         isDraggingRef.current = true;
+
         setDraggedIndex(index);
+
         document.body.style.userSelect = "none";
       }, 400); // 400ms long-press threshold
     },
+
     [isReordering],
   );
 
@@ -182,11 +246,14 @@ function HabitList({ onSelectHabit }: HabitListProps) {
     (e: React.PointerEvent) => {
       if (isDraggingRef.current && draggedIndex !== null) {
         // Find which card we're over
+
         const cards = document.querySelectorAll(".habit-card");
+
         let newOverIndex: number | null = null;
 
         cards.forEach((card, idx) => {
           const rect = card.getBoundingClientRect();
+
           if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
             newOverIndex = idx;
           }
@@ -197,20 +264,26 @@ function HabitList({ onSelectHabit }: HabitListProps) {
         }
       } else if (longPressTimerRef.current) {
         // Cancel long-press if moved too much
+
         const dx = e.clientX - dragStartPosRef.current.x;
+
         const dy = e.clientY - dragStartPosRef.current.y;
+
         if (Math.sqrt(dx * dx + dy * dy) > 10) {
           window.clearTimeout(longPressTimerRef.current);
+
           longPressTimerRef.current = null;
         }
       }
     },
+
     [draggedIndex],
   );
 
   const handlePointerUp = useCallback(() => {
     if (longPressTimerRef.current) {
       window.clearTimeout(longPressTimerRef.current);
+
       longPressTimerRef.current = null;
     }
 
@@ -221,20 +294,27 @@ function HabitList({ onSelectHabit }: HabitListProps) {
       draggedIndex !== dragOverIndex
     ) {
       // Commit reorder
+
       const reorderedHabits = [...habits];
+
       const [draggedItem] = reorderedHabits.splice(draggedIndex, 1);
+
       reorderedHabits.splice(dragOverIndex, 0, draggedItem);
 
       commitReorder(reorderedHabits);
     }
 
     isDraggingRef.current = false;
+
     setDraggedIndex(null);
+
     setDragOverIndex(null);
+
     document.body.style.userSelect = "";
   }, [draggedIndex, dragOverIndex, habits, commitReorder]);
 
   // Keyboard accessible reorder
+
   const handleKeyboardReorder = useCallback(
     (index: number, direction: "up" | "down") => {
       const targetIndex = direction === "up" ? index - 1 : index + 1;
@@ -244,23 +324,30 @@ function HabitList({ onSelectHabit }: HabitListProps) {
       }
 
       const reorderedHabits = [...habits];
+
       [reorderedHabits[index], reorderedHabits[targetIndex]] = [
         reorderedHabits[targetIndex],
+
         reorderedHabits[index],
       ];
 
       commitReorder(reorderedHabits);
 
       // Announce change
+
       const habitName = reorderedHabits[targetIndex].habit.name;
+
       const position = targetIndex + 1;
+
       const announcement = `${habitName} moved to position ${position}`;
 
       const liveRegion = document.getElementById("reorder-announcer");
+
       if (liveRegion) {
         liveRegion.textContent = announcement;
       }
     },
+
     [habits, commitReorder],
   );
 
@@ -269,16 +356,18 @@ function HabitList({ onSelectHabit }: HabitListProps) {
       <section className="habit-list-page" aria-busy="true">
         <PageHeader
           eyebrow="Habits"
+
           title="Your habits"
+
           actions={
-            <Link
-              to="/app/habits/archived"
-              className="habit-list-archived-link"
-            >
-              View archived
+            <Link to="/app/habits/archived" className="view-archived-link">
+              <Archive size={15} aria-hidden="true" />
+
+              <span>View archived</span>
             </Link>
           }
         />
+
         <div className="habit-list-loading">
           <LoadingSpinner size="lg" />
         </div>
@@ -291,16 +380,18 @@ function HabitList({ onSelectHabit }: HabitListProps) {
       <section className="habit-list-page">
         <PageHeader
           eyebrow="Habits"
+
           title="Your habits"
+
           actions={
-            <Link
-              to="/app/habits/archived"
-              className="habit-list-archived-link"
-            >
-              View archived
+            <Link to="/app/habits/archived" className="view-archived-link">
+              <Archive size={15} aria-hidden="true" />
+
+              <span>View archived</span>
             </Link>
           }
         />
+
         <ErrorState message={loadError} />
       </section>
     );
@@ -311,19 +402,23 @@ function HabitList({ onSelectHabit }: HabitListProps) {
       <section className="habit-list-page">
         <PageHeader
           eyebrow="Habits"
+
           title="Your habits"
+
           actions={
-            <Link
-              to="/app/habits/archived"
-              className="habit-list-archived-link"
-            >
-              View archived
+            <Link to="/app/habits/archived" className="view-archived-link">
+              <Archive size={15} aria-hidden="true" />
+
+              <span>View archived</span>
             </Link>
           }
         />
+
         <EmptyState
           title="No habits yet"
+
           description="You don't have any active habits. Choose a habit from the catalog to get started."
+
           action={
             <Button onClick={() => navigate("/app/habits/catalog")}>
               Browse catalog
@@ -338,18 +433,25 @@ function HabitList({ onSelectHabit }: HabitListProps) {
     <section className="habit-list-page">
       <PageHeader
         eyebrow="Habits"
+
         title="Your habits"
+
         actions={
-          <Link to="/app/habits/archived" className="habit-list-archived-link">
-            View archived
+          <Link to="/app/habits/archived" className="view-archived-link">
+            <Archive size={15} aria-hidden="true" />
+
+            <span>View archived</span>
           </Link>
         }
       />
 
       <div
         id="reorder-announcer"
+
         className="sr-only"
+
         aria-live="polite"
+
         aria-atomic="true"
       />
 
@@ -362,135 +464,187 @@ function HabitList({ onSelectHabit }: HabitListProps) {
       <ul className="habit-list">
         {habits.map((userHabit, index) => {
           const habit = userHabit.habit;
+
           const isArchiving = archivingHabitId === userHabit.habitId;
+
           const isDragging = draggedIndex === index;
+
           const isDragOver = dragOverIndex === index && draggedIndex !== index;
 
           return (
             <li
               key={userHabit.id}
+
               className={`habit-card-wrapper ${
                 isDragging ? "habit-card-dragging" : ""
-              } ${isDragOver ? "habit-card-drag-over" : ""}`}
+              } ${isDragOver ? "habit-card-drag-over" : ""} ${
+                showReorderMenu === index ? "habit-card-menu-open" : ""
+              }`}
+
               onPointerDown={(e) => handlePointerDown(e, index)}
+
               onPointerMove={handlePointerMove}
+
               onPointerUp={handlePointerUp}
+
               onPointerCancel={handlePointerUp}
             >
               <TiltCard className="habit-card">
-                <div className="habit-card-content">
-                  <div className="habit-heading-row">
-                    <div className="habit-icon" aria-hidden="true">
-                      {getHabitIcon(habit)}
+                <div className="habit-card-layout">
+                  <div className="habit-card-content">
+                    <div className="habit-heading-row">
+                      <div className="habit-icon" aria-hidden="true">
+                        {getHabitIcon(habit)}
+                      </div>
+
+                      <button
+                        type="button"
+
+                        className="habit-name-button"
+
+                        onClick={() => onSelectHabit?.(userHabit.habitId)}
+
+                        disabled={isDragging}
+                      >
+                        <h3 className="habit-name">{habit.name}</h3>
+
+                        {habit.description && (
+                          <p className="habit-description">
+                            {habit.description}
+                          </p>
+                        )}
+                      </button>
                     </div>
 
-                    <button
-                      type="button"
-                      className="habit-name-button"
-                      onClick={() => onSelectHabit?.(userHabit.habitId)}
-                      disabled={isDragging}
-                    >
-                      <h3 className="habit-name">{habit.name}</h3>
+                    <div className="habit-meta">
+                      <div className="habit-meta-item">
+                        <span className="habit-meta-label">Target</span>
 
-                      {habit.description && (
-                        <p className="habit-description">{habit.description}</p>
+                        <span className="habit-meta-value">
+                          {formatTarget(habit)}
+                        </span>
+                      </div>
+
+                      <div className="habit-meta-item">
+                        <span className="habit-meta-label">Schedule</span>
+
+                        <span className="habit-meta-value">
+                          {formatSchedule(habit)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="habit-card-actions">
+                    <div className="habit-menu-container">
+                      <button
+                        type="button"
+
+                        className="habit-menu-button"
+
+                        onClick={(e) => {
+                          e.stopPropagation();
+
+                          setShowReorderMenu(
+                            showReorderMenu === index ? null : index,
+                          );
+                        }}
+
+                        aria-label={`Options for ${habit.name}`}
+
+                        aria-expanded={showReorderMenu === index}
+
+                        aria-haspopup="true"
+                      >
+                        <MoreVertical size={16} aria-hidden="true" />
+                      </button>
+
+                      {showReorderMenu === index && (
+                        <div
+                          className="habit-menu"
+
+                          onPointerDown={(e) => e.stopPropagation()}
+
+                          onMouseDown={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+
+                            onPointerDown={(e) => e.stopPropagation()}
+
+                            onMouseDown={(e) => e.stopPropagation()}
+
+                            onClick={() => {
+                              handleKeyboardReorder(index, "up");
+
+                              setShowReorderMenu(null);
+                            }}
+
+                            disabled={index === 0 || isReordering}
+
+                            className="habit-menu-item"
+                          >
+                            Move up
+                          </button>
+
+                          <button
+                            type="button"
+
+                            onPointerDown={(e) => e.stopPropagation()}
+
+                            onMouseDown={(e) => e.stopPropagation()}
+
+                            onClick={() => {
+                              handleKeyboardReorder(index, "down");
+
+                              setShowReorderMenu(null);
+                            }}
+
+                            disabled={
+                              index === habits.length - 1 || isReordering
+                            }
+
+                            className="habit-menu-item"
+                          >
+                            Move down
+                          </button>
+                        </div>
                       )}
-                    </button>
-                  </div>
-
-                  <div className="habit-meta">
-                    <div className="habit-meta-item">
-                      <span className="habit-meta-label">Target</span>
-
-                      <span className="habit-meta-value">
-                        {formatTarget(habit)}
-                      </span>
                     </div>
 
-                    <div className="habit-meta-item">
-                      <span className="habit-meta-label">Schedule</span>
+                    <Button
+                      variant="ghost"
 
-                      <span className="habit-meta-value">
-                        {formatSchedule(habit)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                      size="sm"
 
-                <div className="habit-card-actions">
-                  <button
-                    type="button"
-                    className="habit-menu-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                      onClick={(e) => {
+                        e.stopPropagation();
 
-                      setShowReorderMenu(
-                        showReorderMenu === index ? null : index,
-                      );
-                    }}
-                    aria-label={`Options for ${habit.name}`}
-                    aria-expanded={showReorderMenu === index}
-                    aria-haspopup="true"
-                  >
-                    <MoreVertical size={18} aria-hidden="true" />
-                  </button>
+                        handleArchive(userHabit.habitId);
+                      }}
 
-                  {showReorderMenu === index && (
-                    <div
-                      className="habit-menu"
-                      onPointerDown={(e) => e.stopPropagation()}
+                      disabled={isArchiving}
+
+                      className="habit-archive-button"
                     >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleKeyboardReorder(index, "up");
-                          setShowReorderMenu(null);
-                        }}
-                        disabled={index === 0 || isReordering}
-                        className="habit-menu-item"
-                      >
-                        Move up
-                      </button>
+                      <Archive aria-hidden="true" size={16} />
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleKeyboardReorder(index, "down");
-                          setShowReorderMenu(null);
-                        }}
-                        disabled={index === habits.length - 1 || isReordering}
-                        className="habit-menu-item"
-                      >
-                        Move down
-                      </button>
-                    </div>
-                  )}
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleArchive(userHabit.habitId);
-                    }}
-                    disabled={isArchiving}
-                    className="habit-archive-button"
-                  >
-                    <Archive aria-hidden="true" size={16} />
-
-                    <span className="habit-archive-text">
-                      {isArchiving ? "Archiving..." : "Archive"}
-                    </span>
-                  </Button>
+                      <span className="habit-archive-text">
+                        {isArchiving ? "Archiving..." : "Archive"}
+                      </span>
+                    </Button>
+                  </div>
                 </div>
               </TiltCard>
             </li>
           );
         })}
       </ul>
+
       <div className="habit-list-catalog-link">
         <Link to="/app/habits/catalog">
           <span>Browse all habits</span>
+
           <span aria-hidden="true">→</span>
         </Link>
       </div>

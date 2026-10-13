@@ -1,0 +1,2 @@
+-- Enum value already added manually
+-- ALTER TYPE "public"."user_habit_status" ADD VALUE 'REMOVED';

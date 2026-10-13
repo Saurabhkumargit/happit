@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Activity,
@@ -9,7 +9,6 @@ import {
   House,
   ListChecks,
   LogOut,
-  Trash2,
 } from "lucide-react";
 
 import "./AppShell.css";
@@ -17,10 +16,10 @@ import "./AppShell.css";
 interface AppShellProps {
   userEmail: string;
   onLogout: () => Promise<void>;
-  onDeleteAccount: () => Promise<void>;
+  onDeleteAccount?: () => Promise<void>;
   logoutError: string | null;
-  deleteError: string | null;
-  isDeleting: boolean;
+  deleteError?: string | null;
+  isDeleting?: boolean;
 }
 
 interface SidebarLinkProps {
@@ -60,24 +59,38 @@ function SidebarLink({
 function AppShell({
   userEmail,
   onLogout,
-  onDeleteAccount,
   logoutError,
-  deleteError,
-  isDeleting,
 }: AppShellProps) {
   const navigate = useNavigate();
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
-  function handleDeleteAccount() {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete your account? This action cannot be undone.",
-    );
+  useEffect(() => {
+    if (!isAccountMenuOpen) return;
 
-    if (!confirmed) {
-      return;
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        accountMenuRef.current &&
+        !accountMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsAccountMenuOpen(false);
+      }
     }
 
-    void onDeleteAccount();
-  }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsAccountMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isAccountMenuOpen]);
 
   return (
     <div className="app-shell">
@@ -98,11 +111,58 @@ function AppShell({
           <span>Happit</span>
         </button>
 
-        <div
-          className="app-mobile-avatar"
-          aria-label={`Signed in as ${userEmail}`}
-        >
-          {userEmail.charAt(0).toUpperCase()}
+        <div className="app-mobile-account" ref={accountMenuRef}>
+          <button
+            type="button"
+            className="app-mobile-avatar"
+            aria-label="Account menu"
+            aria-expanded={isAccountMenuOpen}
+            aria-haspopup="true"
+            onClick={() => setIsAccountMenuOpen((open) => !open)}
+          >
+            {userEmail.charAt(0).toUpperCase()}
+          </button>
+
+          {isAccountMenuOpen && (
+            <div
+              className="app-mobile-account-menu"
+              aria-label="Account menu"
+            >
+              <div className="app-mobile-account-identity">
+                <div className="app-avatar">
+                  {userEmail.charAt(0).toUpperCase()}
+                </div>
+
+                <div className="app-account-info">
+                  <span className="app-account-label">
+                    Signed in as
+                  </span>
+
+                  <span className="app-account-email">
+                    {userEmail}
+                  </span>
+                </div>
+              </div>
+
+              {logoutError && (
+                <p className="app-error" role="alert">
+                  {logoutError}
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="app-sidebar-action app-mobile-logout"
+                onClick={() => {
+                  setIsAccountMenuOpen(false);
+                  void onLogout();
+                }}
+              >
+                <LogOut size={17} aria-hidden="true" />
+                <span>Log out</span>
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -199,33 +259,6 @@ function AppShell({
               />
 
               <span>Log out</span>
-            </button>
-
-            {deleteError && (
-              <p
-                className="app-error"
-                role="alert"
-              >
-                {deleteError}
-              </p>
-            )}
-
-            <button
-              type="button"
-              className="app-sidebar-action danger"
-              onClick={handleDeleteAccount}
-              disabled={isDeleting}
-            >
-              <Trash2
-                size={17}
-                aria-hidden="true"
-              />
-
-              <span>
-                {isDeleting
-                  ? "Deleting account..."
-                  : "Delete account"}
-              </span>
             </button>
           </div>
         </div>

@@ -18,6 +18,7 @@ import {
 import { broadcastAuthEvent, createAuthChannel } from "./services/authChannel";
 import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
+import AuthLayout from "./components/auth/AuthLayout";
 import HabitList from "./components/habits/HabitList";
 import HabitCatalog from "./components/habits/HabitCatalog";
 import ArchivedHabitList from "./components/habits/ArchivedHabitList";
@@ -295,16 +296,17 @@ function AppContent() {
   }
 
   return (
-    <main>
-      <h1>Happit</h1>
-
+    <AuthLayout mode={authMode}>
       {authMode === "login" ? (
         <>
           <LoginForm onSuccess={handleAuthSuccess} />
 
-          <p>
+          <p className="auth-switch">
             Don't have an account?{" "}
-            <button type="button" onClick={() => setAuthMode("register")}>
+            <button
+              type="button"
+              onClick={() => setAuthMode("register")}
+            >
               Create one
             </button>
           </p>
@@ -313,15 +315,18 @@ function AppContent() {
         <>
           <RegisterForm onSuccess={handleAuthSuccess} />
 
-          <p>
+          <p className="auth-switch">
             Already have an account?{" "}
-            <button type="button" onClick={() => setAuthMode("login")}>
+            <button
+              type="button"
+              onClick={() => setAuthMode("login")}
+            >
               Log in
             </button>
           </p>
         </>
       )}
-    </main>
+    </AuthLayout>
   );
 }
 

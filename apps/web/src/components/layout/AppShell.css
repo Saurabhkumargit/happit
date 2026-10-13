@@ -294,6 +294,47 @@
   display: none;
 }
 
+.app-mobile-account {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.app-mobile-account-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 100;
+  width: min(290px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface, #121015);
+  box-shadow: 0 12px 36px rgb(0 0 0 / 35%);
+}
+
+.app-mobile-account-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-mobile-account-identity .app-account-info {
+  min-width: 0;
+}
+
+.app-mobile-account-identity .app-account-email {
+  overflow-wrap: anywhere;
+}
+
+.app-mobile-logout {
+  width: 100%;
+  margin-top: 12px;
+  text-align: left;
+}
+
 /* ─────────────────────────────────────────
    Mobile floating navigation
 ───────────────────────────────────────── */
@@ -314,24 +355,24 @@
 
   /* Mobile header */
   .app-mobile-header {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 30;
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 30;
 
-  height: 60px;
+    height: 60px;
 
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  padding: 0 var(--space-4);
+    padding: 0 var(--space-4);
 
-  background: rgb(11 10 13 / 94%);
-  border-bottom: 1px solid var(--color-border);
+    background: rgb(11 10 13 / 94%);
+    border-bottom: 1px solid var(--color-border);
 
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
 
   .app-mobile-brand {
     display: flex;
@@ -360,15 +401,13 @@
   }
 
   .app-mobile-avatar {
-    position: absolute;
-    right: var(--space-4);
-
     width: 32px;
     height: 32px;
 
     border-radius: var(--radius-md);
 
     font-size: 13px;
+    cursor: pointer;
   }
 
   /* Main content */

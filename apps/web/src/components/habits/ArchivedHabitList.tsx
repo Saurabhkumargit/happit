@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
+import { Archive, ArrowLeft, RotateCcw, X } from "lucide-react";
 
 import {
-  deleteHabit,
+  removeHabit,
   getHabits,
   restoreHabit,
   type UserHabit,
 } from "../../services/habitApi";
+
+import "./ArchivedHabitList.css";
 
 function formatSchedule(habit: UserHabit["habit"]) {
   switch (habit.scheduleType) {
@@ -29,7 +32,7 @@ function ArchivedHabitList() {
   const [habits, setHabits] = useState<UserHabit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [restoringHabitId, setRestoringHabitId] = useState<string | null>(null);
-  const [deletingHabitId, setDeletingHabitId] = useState<string | null>(null);
+  const [removingHabitId, setRemovingHabitId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,7 +41,6 @@ function ArchivedHabitList() {
         setError(null);
 
         const result = await getHabits();
-
         setHabits(result.filter((habit) => habit.status === "ARCHIVED"));
       } catch (error) {
         setError(
@@ -51,7 +53,7 @@ function ArchivedHabitList() {
       }
     }
 
-    loadHabits();
+    void loadHabits();
   }, []);
 
   async function handleRestore(habitId: string) {
@@ -73,94 +75,162 @@ function ArchivedHabitList() {
     }
   }
 
-  async function handleDelete(habitId: string) {
-    const confirmed = window.confirm(
-      "Are you sure you want to permanently delete this habit?",
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+  async function handleRemove(habitId: string) {
     try {
       setError(null);
-      setDeletingHabitId(habitId);
+      setRemovingHabitId(habitId);
 
-      await deleteHabit(habitId);
+      await removeHabit(habitId);
 
-      setHabits((current) => current.filter((habit) => habit.habitId !== habitId));
+      setHabits((current) =>
+        current.filter((habit) => habit.habitId !== habitId),
+      );
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : "Unable to delete habit",
+        error instanceof Error ? error.message : "Unable to remove habit",
       );
     } finally {
-      setDeletingHabitId(null);
+      setRemovingHabitId(null);
     }
-  }
-
-  if (isLoading) {
-    return <p>Loading archived habits...</p>;
-  }
-
-  if (error) {
-    return (
-      <section>
-        <h2>Archived habits</h2>
-        <p role="alert">{error}</p>
-      </section>
-    );
-  }
-
-  if (habits.length === 0) {
-    return (
-      <section>
-        <h2>Archived habits</h2>
-        <p>You don't have any archived habits.</p>
-      </section>
-    );
   }
 
   return (
-    <section>
-      <h2>Archived habits</h2>
+    <section className="archived-habits-page">
+      <header className="archived-habits-header">
+        <div>
+          <div className="archived-habits-eyebrow">
+            <Archive size={14} aria-hidden="true" />
+            <span>YOUR LIBRARY</span>
+          </div>
 
-      <ul>
-        {habits.map((userHabit) => (
-          <li key={userHabit.id}>
-            <h3>{userHabit.habit.name}</h3>
+          <h1>Archived habits</h1>
 
-            {userHabit.habit.description && (
-              <p>{userHabit.habit.description}</p>
-            )}
+          <p>
+            Habits you’ve put on hold. Restore one whenever you’re ready to
+            continue.
+          </p>
+        </div>
 
-            <p>
-              <strong>Schedule:</strong> {formatSchedule(userHabit.habit)}
-            </p>
+        {!isLoading && !error && habits.length > 0 && (
+          <span className="archived-habits-count">
+            {habits.length} {habits.length === 1 ? "habit" : "habits"}
+          </span>
+        )}
+      </header>
 
-            <p>
-              <strong>Target:</strong> {formatTarget(userHabit.habit)}
-            </p>
+      {error && (
+        <div className="archived-habits-error" role="alert">
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="archived-retry-button"
+          >
+            Try again
+          </button>
+        </div>
+      )}
 
-            <button
-              type="button"
-              onClick={() => handleRestore(userHabit.habitId)}
-              disabled={restoringHabitId === userHabit.habitId}
-            >
-              {restoringHabitId === userHabit.habitId
-                ? "Restoring..."
-                : "Restore"}
-            </button>
+      {isLoading ? (
+        <div className="archived-habits-status" role="status">
+          <span className="archived-loading-indicator" />
+          <p>Loading archived habits...</p>
+        </div>
+      ) : !error && habits.length === 0 ? (
+        <div className="archived-habits-empty">
+          <div className="archived-empty-icon">
+            <Archive size={25} strokeWidth={1.5} aria-hidden="true" />
+          </div>
 
-            <button
-              type="button"
-              onClick={() => handleDelete(userHabit.habitId)}
-              disabled={deletingHabitId === userHabit.habitId}
-            >
-              {deletingHabitId === userHabit.habitId ? "Deleting..." : "Delete"}
-            </button>
-          </li>
-        ))}
-      </ul>
+          <h2>Nothing on the sidelines.</h2>
+          <p>You don't have any archived habits.</p>
+          <p>
+            Your archived habits will appear here. For now, keep building your
+            routine one day at a time.
+          </p>
+
+          <a href="/app/habits" className="archived-empty-link">
+            <ArrowLeft size={16} aria-hidden="true" />
+            Back to habits
+          </a>
+        </div>
+      ) : !error ? (
+        <div className="archived-habits-list">
+          {habits.map((userHabit) => {
+            const isRestoring = restoringHabitId === userHabit.habitId;
+            const isRemoving = removingHabitId === userHabit.habitId;
+            const isBusy = isRestoring || isRemoving;
+
+            return (
+              <article
+                className="archived-habit-card"
+                key={userHabit.id}
+              >
+                <div className="archived-habit-main">
+                  <div className="archived-habit-icon">
+                    <Archive size={19} strokeWidth={1.6} aria-hidden="true" />
+                  </div>
+
+                  <div className="archived-habit-content">
+                    <div className="archived-habit-title-row">
+                      <h2>{userHabit.habit.name}</h2>
+                      <span className="archived-status-label">Archived</span>
+                    </div>
+
+                    {userHabit.habit.description && (
+                      <p className="archived-habit-description">
+                        {userHabit.habit.description}
+                      </p>
+                    )}
+
+                    <div className="archived-habit-metadata">
+                      <div className="archived-metadata-item">
+                        <span>Schedule</span>
+                        <strong>{formatSchedule(userHabit.habit)}</strong>
+                      </div>
+
+                      <div className="archived-metadata-divider" />
+
+                      <div className="archived-metadata-item">
+                        <span>Target</span>
+                        <strong>{formatTarget(userHabit.habit)}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="archived-habit-actions">
+                  <button
+                    type="button"
+                    className="archived-restore-button"
+                    onClick={() => void handleRestore(userHabit.habitId)}
+                    disabled={isBusy}
+                  >
+                    <RotateCcw size={15} aria-hidden="true" />
+                    {isRestoring ? "Restoring..." : "Restore"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="archived-remove-button"
+                    onClick={() => void handleRemove(userHabit.habitId)}
+                    disabled={isBusy}
+                  >
+                    <X size={15} aria-hidden="true" />
+                    {isRemoving ? "Removing..." : "Remove"}
+                  </button>
+                </div>
+
+                {isRestoring && (
+                  <span className="sr-only" role="status">
+                    Restoring {userHabit.habit.name}
+                  </span>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      ) : null}
     </section>
   );
 }

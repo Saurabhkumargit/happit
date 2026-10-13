@@ -88,15 +88,17 @@ function Heatmap({ data, startDate, endDate }: HeatmapProps) {
               }
 
               const intensityClass =
-                day.intensity === 0
+                day.state === "NOT_SCHEDULED" && day.intensity === 0
                   ? "heatmap-day-intensity-0"
-                  : day.intensity < 0.33
-                    ? "heatmap-day-intensity-1"
-                    : day.intensity < 0.67
-                      ? "heatmap-day-intensity-2"
-                      : day.intensity < 1
-                        ? "heatmap-day-intensity-3"
-                        : "heatmap-day-intensity-4";
+                  : day.intensity === 0
+                    ? "heatmap-day-intensity-0"
+                    : day.intensity < 0.33
+                      ? "heatmap-day-intensity-1"
+                      : day.intensity < 0.67
+                        ? "heatmap-day-intensity-2"
+                        : day.intensity < 1
+                          ? "heatmap-day-intensity-3"
+                          : "heatmap-day-intensity-4";
 
               const stateLabel =
                 day.state === "COMPLETED"

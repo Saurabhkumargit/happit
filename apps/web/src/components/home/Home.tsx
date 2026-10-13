@@ -214,7 +214,9 @@ function Home() {
             }),
           ]);
 
-        setHabits(habitsResult);
+        setHabits(
+          habitsResult.filter((habit) => habit.status === "ACTIVE"),
+        );
         setProgress(progressResult);
         setActivities(activitiesResult);
       } catch (error) {

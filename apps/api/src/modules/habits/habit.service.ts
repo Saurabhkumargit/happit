@@ -1,4 +1,4 @@
-import { and, eq, max } from "drizzle-orm";
+import { and, eq, max, sql } from "drizzle-orm";
 
 import { db } from "../../db/index.js";
 import { habits, userHabits } from "../../db/schema.js";
@@ -50,6 +50,7 @@ export async function adoptHabit(userId: string, habitId: string) {
   const [existingUserHabit] = await db
     .select({
       id: userHabits.id,
+      status: userHabits.status,
     })
     .from(userHabits)
     .where(
@@ -60,7 +61,7 @@ export async function adoptHabit(userId: string, habitId: string) {
     )
     .limit(1);
 
-  if (existingUserHabit) {
+  if (existingUserHabit && existingUserHabit.status !== "REMOVED") {
     throw new AppError(
       409,
       "HABIT_ALREADY_ADOPTED",
@@ -110,7 +111,12 @@ export async function listUserHabits(userId: string) {
     })
     .from(userHabits)
     .innerJoin(habits, eq(userHabits.habitId, habits.id))
-    .where(eq(userHabits.userId, userId))
+    .where(
+      and(
+        eq(userHabits.userId, userId),
+        sql`${userHabits.status} != 'REMOVED'`,
+      ),
+    )
     .orderBy(userHabits.sortOrder);
 }
 
@@ -251,14 +257,15 @@ export async function deleteUserHabit(
   habitId: string,
 ) {
   const [userHabit] = await db
-    .delete(userHabits)
+    .select()
+    .from(userHabits)
     .where(
       and(
         eq(userHabits.userId, userId),
         eq(userHabits.habitId, habitId),
       ),
     )
-    .returning();
+    .limit(1);
 
   if (!userHabit) {
     throw new AppError(
@@ -268,7 +275,31 @@ export async function deleteUserHabit(
     );
   }
 
-  return userHabit;
+  if (userHabit.status === "REMOVED") {
+    throw new AppError(
+      409,
+      "HABIT_ALREADY_REMOVED",
+      "Habit has already been removed",
+    );
+  }
+
+  const now = new Date();
+
+  await db
+    .update(userHabits)
+    .set({
+      status: "REMOVED",
+      removedAt: now,
+      updatedAt: now,
+    })
+    .where(
+      and(
+        eq(userHabits.userId, userId),
+        eq(userHabits.habitId, habitId),
+      ),
+    );
+
+  return;
 }
 
 export async function reorderUserHabits(
