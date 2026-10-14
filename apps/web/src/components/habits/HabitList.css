@@ -53,7 +53,7 @@
     background-color 160ms ease;
 }
 
-*.view-archived-link:hover* {
+.view-archived-link:hover {
   border-color: #514263;
 
   background: #1a1622;
@@ -61,7 +61,7 @@
   color: #d0bfff;
 }
 
-*.view-archived-link:focus-visible* {
+.view-archived-link:focus-visible {
   outline: 2px solid #a78bfa;
 
   outline-offset: 3px;
@@ -117,7 +117,7 @@
   position: relative;
 }
 
-*.habit-card-wrapper.habit-card-menu-open* {
+.habit-card-wrapper.habit-card-menu-open {
   z-index: 100;
 }
 
@@ -167,17 +167,17 @@
 
  */
 
-*.habit-card:hover* {
+.habit-card:hover {
   background: rgb(255 255 255 / 1.5%);
 }
 
-*.habit-card:active* {
+.habit-card:active {
   cursor: grabbing;
 }
 
 /* Remove the old decorative glow completely. */
 
-*.habit-card::before* {
+.habit-card::before {
   display: none;
 }
 
@@ -286,7 +286,7 @@
     border-color 140ms ease;
 }
 
-*.habit-card:hover* .habit-icon {
+.habit-card:hover .habit-icon {
   color: var(--color-primary-hover, #b8a3ff);
 
   background: rgb(167 139 250 / 11%);
@@ -326,7 +326,7 @@
   opacity: 0.82;
 }
 
-*.habit-name-button:focus-visible* {
+.habit-name-button:focus-visible {
   outline: 2px solid var(--color-primary);
 
   outline-offset: 5px;
@@ -334,7 +334,7 @@
   border-radius: 3px;
 }
 
-*.habit-name-button:disabled* {
+.habit-name-button:disabled {
   cursor: default;
 }
 
@@ -480,7 +480,7 @@
     color 140ms ease;
 }
 
-*.habit-menu-button:hover*,
+.habit-menu-button:hover,
 .habit-menu-button[aria-expanded="true"] {
   border-color: #654995;
 
@@ -546,7 +546,7 @@
   color: #d8c7ff;
 }
 
-*.habit-menu-item:disabled* {
+.habit-menu-item:disabled {
   opacity: 0.35;
 
   cursor: not-allowed;
@@ -837,7 +837,7 @@
     border-color 130ms ease;
 }
 
-.habit-list-catalog-link a*:hover* {
+.habit-list-catalog-link a:hover {
   color: var(--color-primary);
 
   background: var(--color-primary-soft);
@@ -845,7 +845,7 @@
   border-color: var(--color-primary-border);
 }
 
-.habit-list-catalog-link a span*:last-child* {
+.habit-list-catalog-link a span:last-child {
   color: var(--color-primary);
 
   font-size: 15px;
@@ -853,7 +853,7 @@
   line-height: 1;
 }
 
-.habit-list-catalog-link a*:focus-visible* {
+.habit-list-catalog-link a:focus-visible {
   outline: 2px solid var(--color-primary);
 
   outline-offset: 3px;

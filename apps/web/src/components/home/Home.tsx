@@ -266,7 +266,7 @@ function Home() {
           title="Your day starts here"
           description="Choose a few habits to build your routine."
           action={
-            <Button onClick={() => navigate("/app/habits")}>
+            <Button onClick={() => navigate("/app/habits/catalog")}>
               Browse habits
             </Button>
           }
