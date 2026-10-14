@@ -18,7 +18,26 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .then(async (cache) => {
+        for (const asset of STATIC_ASSETS) {
+          try {
+            const response = await fetch(asset);
+
+            if (response.ok) {
+              await cache.put(asset, response);
+            } else {
+              console.warn(
+                `Service Worker: Failed to cache ${asset}: ${response.status}`
+              );
+            }
+          } catch (error) {
+            console.warn(
+              `Service Worker: Could not cache ${asset}`,
+              error
+            );
+          }
+        }
+      })
       .then(() => self.skipWaiting())
   );
 });
