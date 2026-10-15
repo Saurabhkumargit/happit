@@ -22,7 +22,7 @@ router.post("/register", async (req, res, next) => {
     res.cookie("session", session.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "none",
       path: "/",
       expires: session.expiresAt,
     });
@@ -44,7 +44,7 @@ router.post("/login", async (req, res, next) => {
     res.cookie("session", session.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "none",
       path: "/",
       expires: session.expiresAt,
     });
