@@ -4,477 +4,170 @@
 
 ### Build consistency. One habit at a time.
 
-A habit-building and consistency-tracking web app that helps you record the effort you put in, understand your progress, and build routines that last.
+A habit-building app focused on sustainable routines, real activity tracking, and visible progress.
 
-[**Visit Happit →**](https://happit.online) · [Report a bug](https://github.com/Saurabhkumargit/happit/issues)
+[**Open Happit →**](https://happit.online) · [Report a bug](https://github.com/Saurabhkumargit/happit/issues)
 
 </div>
 
 ---
 
-## Table of contents
+## About
 
-- [About Happit](#about-happit)
-- [Product philosophy](#product-philosophy)
-- [Features](#features)
-- [Install Happit on Android](#install-happit-on-android)
-- [Screens and experience](#screens-and-experience)
-- [Technology stack](#technology-stack)
-- [Architecture](#architecture)
-- [Repository structure](#repository-structure)
-- [Getting started](#getting-started)
-- [Environment variables](#environment-variables)
-- [Database and migrations](#database-and-migrations)
-- [Available scripts](#available-scripts)
-- [Testing and quality checks](#testing-and-quality-checks)
-- [Production deployment](#production-deployment)
-- [Security notes](#security-notes)
-- [Product roadmap](#product-roadmap)
-- [Contributing](#contributing)
-- [License](#license)
+Happit helps you build routines by recording what you actually do—not just ticking a checkbox. Choose habits from a curated catalog, log activities, and review your consistency over time.
 
-## About Happit
-
-Happit is a habit-building and consistency-tracking application built around a simple idea: **progress comes from repeatedly showing up, not from being perfect every day.**
-
-Many habit trackers reduce behavior to a binary checkbox: *done* or *not done*. Happit takes a more activity-focused approach. Users adopt habits from a curated catalog and record what they actually did through a timer or manual activity logging. Their activity history and progress views help make consistency visible over time.
-
-The goal is to make it easier to answer four questions:
-
-- **What am I working on?**
-- **What did I actually do?**
-- **How consistently have I been showing up?**
-- **How is my progress changing over time?**
-
-**Live application:** [https://happit.online](https://happit.online)  
-**Source code:** [https://github.com/Saurabhkumargit/happit](https://github.com/Saurabhkumargit/happit)
-
-> Happit is actively being developed. This README describes the current implementation and distinguishes it from ideas planned for later phases.
-
-## Product philosophy
-
-Happit's product decisions are guided by a few principles:
-
-- **Consistency over perfection.** Sustainable repetition matters more than flawless execution.
-- **Progress over punishment.** Missing a day should not erase the value of past effort.
-- **Real activity over empty checkboxes.** Record effort and activity rather than relying only on a completion toggle.
-- **Sustainable habits over aggressive streak chasing.** The product should support routines that fit real life.
-- **Simplicity over feature bloat.** Keep the core experience focused and low-friction.
-- **Clear feedback.** Make activity and progress understandable.
-- **Gamification with a purpose.** Future progression and social features should support healthy behavior, not replace it.
-
-### Why a curated habit catalog?
-
-Happit uses predefined catalog habits rather than allowing users to create arbitrary habit definitions. A catalog entry owns its canonical name, target, unit, and schedule. Users choose which habits to adopt and can manage their adopted habits without changing the shared definition.
-
-This keeps habit definitions consistent and gives the application a reliable foundation for activity tracking and future progression features.
+**Product principles:** consistency over perfection, progress over punishment, sustainable habits over aggressive streak chasing, and simplicity over feature bloat.
 
 ## Features
 
-The current application includes the following core capabilities:
+- **Accounts:** registration, login, session-based authentication, and logout.
+- **Habit management:** browse the catalog, adopt habits, reorder them, and manage their status.
+- **Activity tracking:** use the timer or log activities manually; review, edit, or delete records through supported workflows.
+- **Progress:** view activity history and progress visualizations.
+- **Installable PWA:** add Happit to a supported device's home screen for an app-like experience.
+- **Responsive dark UI:** minimal surfaces with a restrained purple accent.
 
-### Account and sessions
-- User registration and login.
-- Authenticated application routes.
-- Session-based authentication.
-- Logout.
+### Install on Android
 
-### Habit management
-- Browse the curated habit catalog.
-- Adopt catalog habits into your personal routine.
-- View active habits.
-- Reorder habits.
-- Archive, restore, and remove adopted habits where supported by the application flow.
+1. Open [happit.online](https://happit.online) in Chrome.
+2. Open the three-dot menu.
+3. Select **Install app** or **Add to Home screen**.
+4. Follow the prompt, then launch Happit from your home screen.
 
-### Activity tracking
-- Record activities using the integrated timer.
-- Log activities manually.
-- Validate activity data against the relevant habit's target type and unit.
-- Preserve activity history for review.
-- Edit or delete activities through the supported history workflows.
-- Use idempotency protection on activity creation to reduce duplicate submissions.
-
-### Progress and history
-- Review historical activity.
-- View progress and activity visualizations, including heatmap-style history where available in the interface.
-- Review habit consistency over time.
-- Use the dashboard to see the current routine and recorded activity.
-
-### User experience and PWA
-- Responsive dark interface with a restrained purple accent.
-- Installable Progressive Web App (PWA) support, so Happit can be added to a supported device's home screen and launched in an app-like window.
-- Application-shell offline support for the parts of the experience cached by the service worker.
-- Timer behavior designed to preserve elapsed time through interruptions.
-- Loading, empty, and error states throughout the core experience.
-
-## Install Happit on Android
-
-Happit is a **Progressive Web App (PWA)**. On a supported Android device and browser, you can install it from the website and use it from your home screen like an app—without needing to install it through the Google Play Store.
-
-1. Open [https://happit.online](https://happit.online) in Chrome on your Android device.
-2. Open the browser menu (the three-dot menu).
-3. Choose **Install app** or **Add to Home screen**. The exact wording can vary by browser and device.
-4. Follow the prompt to finish installing.
-5. Launch Happit from the new home-screen icon.
-
-Once installed, Happit can open in an app-like experience rather than a regular browser tab. The installation option and available PWA behavior depend on browser support and the site's current PWA configuration.
-
-**PWA is not the same as a native Android app.** Happit does not currently require a Play Store listing or a separate APK for this install flow.
-
-### Offline behavior
-
-Some application resources may be available from the service worker cache, which can help the app shell load in limited connectivity. However, **Happit is not a fully offline-first app**: signing in, loading fresh server data, and saving activities require a network connection. Offline activity queues and conflict resolution are not currently promised.
-
-## Screens and experience
-
-Happit is designed around a minimal, dark visual system:
-
-- Near-black page backgrounds and slightly lighter surfaces.
-- Subtle borders and restrained rounded corners.
-- Purple as the primary accent.
-- Instrument Serif for brand and major headings, Inter for interface text, and JetBrains Mono for timer or numeric data where applicable.
-- Simple line icons and a consistent spacing system.
-
-The dashboard is intended to answer three practical questions quickly: **What should I do today? What have I completed? How am I doing overall?**
+Happit is a Progressive Web App, not a native Android app. Some app-shell resources may be cached, but logging in, loading fresh data, and saving activities require a network connection. Full offline activity syncing is not currently supported.
 
 ## Technology stack
 
-| Layer | Technologies |
+| Area | Technology |
 |---|---|
 | Frontend | React, TypeScript, Vite |
-| Routing and UI | React Router, Tailwind CSS, Lucide React, Motion |
+| UI and routing | React Router, Tailwind CSS, Lucide React, Motion |
 | Backend | Node.js, Express, TypeScript |
-| API validation | Zod |
-| Database | PostgreSQL |
-| Database toolkit and migrations | Drizzle ORM, Drizzle Kit |
+| Validation | Zod |
+| Database | PostgreSQL, Drizzle ORM, Drizzle Kit |
 | Authentication | Server-side sessions, password hashing |
 | Testing | Vitest, Testing Library, Supertest |
-| Local database | Docker Compose, PostgreSQL |
-| Frontend hosting | Vercel |
-| Backend hosting | Render |
-| Production database | Neon PostgreSQL |
-| Domain | [happit.online](https://happit.online) |
+| Local database | Docker Compose |
+| Deployment | Vercel (web), Render (API), Neon (PostgreSQL) |
 
 ## Architecture
 
-Happit is a TypeScript monorepo organized as an npm-workspaces project.
+Happit is an npm-workspaces monorepo. The web app communicates with a versioned REST API; the API validates requests, runs feature-module service logic, and accesses PostgreSQL through Drizzle ORM.
 
 ```text
 Browser / Installable PWA
           |
+          | HTTPS / JSON
           v
- React + Vite frontend
+React + Vite frontend
           |
-          | HTTPS / REST API
+          | REST API (/api/v1)
           v
-  Express + TypeScript API
+Express + TypeScript API
           |
           v
- PostgreSQL database
+Feature modules and services
+          |
+          v
+Drizzle ORM
+          |
+          v
+PostgreSQL
 ```
 
-The frontend and API are deployed independently. The API uses PostgreSQL through Drizzle ORM, with schema changes managed through migrations.
-
-### Production services
-
-- **Frontend:** Vercel
-- **API:** Render
-- **Database:** Neon PostgreSQL
-- **Domain:** `https://happit.online`
-
-The production API base URL is configured through the frontend's `VITE_API_URL` environment variable. Do not hard-code deployment URLs into application code when an environment variable is appropriate.
+See [`docs/architecture/overview.md`](docs/architecture/overview.md) for the detailed architecture and request flow.
 
 ## Repository structure
 
 ```text
 happit/
 ├── apps/
-│   ├── api/                 # Express API, database access, migrations and tests
-│   │   ├── src/
-│   │   └── package.json
-│   └── web/                 # React + Vite frontend and UI tests
-│       ├── src/
-│       ├── public/
-│       └── package.json
-├── docker-compose.yml        # Local PostgreSQL service
-├── package.json              # npm workspaces and root scripts
-├── package-lock.json
+│   ├── api/       # Express API, database schema, migrations, and tests
+│   └── web/       # React + Vite frontend
+├── docs/          # Project documentation
+├── docker-compose.yml
+├── package.json   # npm workspaces and root scripts
 └── README.md
 ```
-
-The exact contents inside `src/` may evolve as the project progresses.
 
 ## Getting started
 
 ### Prerequisites
 
-Install the following before starting:
+- Node.js and npm
+- Docker Desktop (for the local PostgreSQL database)
 
-- [Node.js](https://nodejs.org/) with a version compatible with the repository's Vite and TypeScript toolchain.
-- npm.
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) if you want to run the local PostgreSQL container.
-
-### 1. Clone the repository
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/Saurabhkumargit/happit.git
 cd happit
-```
-
-### 2. Install dependencies
-
-Run this from the repository root:
-
-```bash
 npm ci
 ```
 
-### 3. Start the local database
-
-The included Docker Compose file starts PostgreSQL and exposes it on port `5433` on your machine.
+### 2. Start PostgreSQL
 
 ```bash
 docker compose up -d postgres
 ```
 
-The local Compose defaults are intended for development only:
+The development database is exposed on port `5433`. The default Compose credentials are for local development only—never reuse them in production.
 
-- Database: `happit`
-- User: `postgres`
-- Password: `postgres`
-- Host port: `5433`
+### 3. Configure environment variables
 
-**Do not reuse these development credentials in production.**
-
-### 4. Configure environment variables
-
-Create the environment files required by the API and web app. Use the examples below as a guide, but check the current application configuration and validation before running the app: required variables may change as development continues.
-
-For local development, the API database connection should point to the local database, for example:
+Create the environment files expected by the API and web workspaces. At minimum, configure the API database connection and session secret, allowed frontend origin(s), and the web app's API URL. For example, the local database URL may be:
 
 ```dotenv
 DATABASE_URL=postgresql://postgres:postgres@localhost:5433/happit
 ```
 
-Set a unique local session secret and the frontend origin used by the development server. Never commit `.env` files or real credentials.
+Use a unique local session secret. Check the current environment validation and example files for all required variables. Never commit real `.env` files or credentials.
 
-### 5. Apply database migrations
-
-From the repository root:
+### 4. Migrate, seed, and run
 
 ```bash
 npm run db:migrate -w @happit/api
-```
-
-Seed the curated habit catalog:
-
-```bash
 npm run db:seed -w @happit/api
-```
-
-Run the seed command only when appropriate for the target database. Never point local development commands at production unintentionally.
-
-### 6. Start the application
-
-```bash
 npm run dev
 ```
 
-The root script starts each workspace that defines a development script. The web and API development servers will print their local URLs in the terminal.
+Run the seed command only against the intended database. The root development script starts the workspaces that define a development command; check the terminal for their local URLs.
 
-If a service fails to start, verify its environment variables, that PostgreSQL is running, and that the configured ports are available.
+## Useful commands
 
-## Environment variables
-
-Environment variable names and requirements should be checked against the current code before deployment. The main variables used by the deployed architecture are:
-
-| Variable | Used by | Purpose |
-|---|---|---|
-| `DATABASE_URL` | API | PostgreSQL connection string |
-| `SESSION_SECRET` | API | Secret used by session configuration |
-| `CORS_ORIGIN` | API | Allowed frontend origin(s) |
-| `NODE_ENV` | API | Runtime environment |
-| `VITE_API_URL` | Web | Base URL for the API |
-
-For local development, set `VITE_API_URL` to the local API URL printed by the API server. In production, it points to the deployed API.
-
-If `CORS_ORIGIN` accepts multiple origins, use the format expected by the current API configuration. Do not assume delimiters without checking the implementation.
-
-**Security rules:**
-- Never commit real database URLs, session secrets, passwords, or API credentials.
-- Do not expose server-only secrets through variables prefixed with `VITE_`; Vite exposes those values to client-side code.
-- Use separate credentials for local development and production.
-- Configure production environment variables in the relevant hosting provider's dashboard.
-
-## Database and migrations
-
-Happit uses PostgreSQL with Drizzle ORM. The schema includes core entities for users, sessions, catalog habits, each user's adopted habits, and activity records.
-
-The data model supports:
-- Canonical catalog habit definitions.
-- Per-user habit adoption and management.
-- Activity records associated with a user's adopted habits.
-- Activity values, duration, units, and source information where applicable.
-- Idempotency keys to help protect activity creation from duplicate requests.
-
-Generate a migration after a schema change:
-
-```bash
-npm run db:generate -w @happit/api
-```
-
-Apply migrations to the configured database:
-
-```bash
-npm run db:migrate -w @happit/api
-```
-
-Seed the catalog when needed:
-
-```bash
-npm run db:seed -w @happit/api
-```
-
-Review generated SQL before applying migrations to any shared or production database. Keep migrations committed alongside the schema changes that require them.
-
-## Available scripts
-
-Run commands from the repository root unless noted otherwise.
+Run these from the repository root:
 
 | Command | Purpose |
 |---|---|
-| `npm run dev` | Start workspace development servers |
-| `npm run build` | Build workspaces that define a build script |
-| `npm test` | Run tests in workspaces that define a test script |
-| `npm run lint` | Run linting across workspaces |
-| `npm run typecheck` | Run TypeScript checks across workspaces |
-| `npm run format` | Format files using workspace scripts |
+| `npm run dev` | Start development servers |
+| `npm run build` | Build workspaces |
+| `npm test` | Run workspace tests |
+| `npm run lint` | Lint workspaces |
+| `npm run typecheck` | Run TypeScript checks |
+| `npm run format` | Format files |
 | `npm run db:generate -w @happit/api` | Generate Drizzle migrations |
-| `npm run db:migrate -w @happit/api` | Apply database migrations |
-| `npm run db:seed -w @happit/api` | Seed catalog data |
+| `npm run db:migrate -w @happit/api` | Apply migrations |
+| `npm run db:seed -w @happit/api` | Seed the habit catalog |
 
-The API and web workspace also expose their own scripts. For example:
+Database-backed tests need the configured test database to be available.
 
-```bash
-npm run test -w @happit/api
-npm run test -w @happit/web
+## Deployment
 
-npm run lint -w @happit/api
-npm run lint -w @happit/web
+- **Web:** [Vercel](https://vercel.com/)
+- **API:** [Render](https://render.com/)
+- **Database:** [Neon](https://neon.tech/)
+- **Live app:** [happit.online](https://happit.online)
 
-npm run typecheck -w @happit/api
-npm run typecheck -w @happit/web
+Configure production environment variables in the hosting providers. Confirm CORS allows the production frontend origin, apply migrations deliberately, and test authentication and core habit/activity flows after deployment. Never store production secrets in source control.
 
-npm run build -w @happit/api
-npm run build -w @happit/web
-```
+## Roadmap
 
-## Testing and quality checks
-
-Happit uses Vitest for automated tests, with Testing Library for frontend behavior and Supertest for API-level tests.
-
-Before submitting changes, run the relevant checks:
-
-```bash
-npm run lint
-npm run typecheck
-npm test
-npm run build
-```
-
-Tests that interact with PostgreSQL require the expected test database to be available and configured. If database-backed tests fail with connection errors, check the test database setup before interpreting the failure as an application regression.
-
-Important behavior to test when changing the product includes:
-- Registration, login, session retrieval, and logout.
-- Habit catalog listing and adoption.
-- Habit ownership and status transitions.
-- Activity validation, creation, editing, and deletion.
-- Duplicate activity submission protection.
-- History and progress calculations.
-- Timer persistence and user-visible error states.
-- Responsive layout and direct-route refresh behavior.
-
-## Production deployment
-
-The live application is available at [https://happit.online](https://happit.online).
-
-Current deployment topology:
-
-| Component | Provider |
-|---|---|
-| Web application | Vercel |
-| REST API | Render |
-| PostgreSQL | Neon |
-| Custom domain and DNS | `happit.online` |
-
-### Deployment checklist
-
-1. Push the intended code to the configured Git branch.
-2. Confirm the frontend and API builds pass.
-3. Configure the production environment variables in the hosting dashboards.
-4. Ensure the API allows requests from the production frontend origin.
-5. Apply database migrations intentionally and verify the production schema.
-6. Confirm the production catalog is seeded.
-7. Verify the API health endpoint.
-8. Test registration, login, habit adoption, activity logging, history, logout, and login again on the production domain.
-9. Check direct navigation and refresh on nested frontend routes.
-10. Review hosting logs if an endpoint or session flow fails.
-
-Production credentials must remain in provider-managed environment variables, not in this README or source control.
-
-## Security notes
-
-Happit handles accounts, sessions, and personal activity data. Changes to authentication, authorization, and database access should be reviewed carefully.
-
-- Enforce authentication on private API routes.
-- Verify that users can access only their own adopted habits and activity records.
-- Validate incoming request data on the server.
-- Keep session secrets and database credentials out of source control.
-- Configure CORS for trusted frontend origins only.
-- Use HTTPS for production traffic.
-- Avoid exposing internal errors, stack traces, or database details in API responses.
-- Treat production database migrations and seed operations with care.
-
-This section is project guidance, not a claim of a formal security audit.
-
-## Product roadmap
-
-Happit is being built in deliberate phases. The live MVP focuses on the personal habit-tracking loop before introducing social competition or more complex progression systems.
-
-### Current foundation
-- Authentication and sessions.
-- Curated habit catalog and adoption.
-- Habit management.
-- Timer-based and manual activity tracking.
-- Activity history and progress views.
-- Responsive UI and PWA improvements.
-- Production deployment on a custom domain.
-
-### Future possibilities
-
-These are **not represented as currently implemented features**:
-
-- More advanced scoring and progression systems.
-- Points and XP history.
-- Reminders and notifications.
-- Clans, leaderboards, seasons, and cooperative challenges.
-- Expanded offline activity support and synchronization.
-- Additional analytics and product insights.
-
-The roadmap is intentionally conservative: new features should reinforce sustainable consistency without making the core product harder to use.
+The current focus is the core personal habit-tracking experience. Potential future work includes richer progression systems, points and XP history, reminders, clans, leaderboards, seasons, challenges, expanded offline synchronization, and additional analytics. These are future possibilities, not claims about current functionality.
 
 ## Contributing
 
-Happit is an evolving project. If you find a bug or have a suggestion:
-
-1. Check whether an issue already exists.
-2. Open an issue with clear reproduction steps or a specific proposal.
-3. Keep changes focused and aligned with the product philosophy.
-4. Run lint, typecheck, tests, and builds relevant to your changes.
-5. Avoid adding features that conflict with the curated catalog model or introduce unnecessary complexity.
-
-For significant changes, discuss the proposed behavior and its impact on the data model before implementing it.
+Bug reports and focused suggestions are welcome through [GitHub Issues](https://github.com/Saurabhkumargit/happit/issues). Before submitting a change, run the relevant lint, typecheck, test, and build commands.
 
 ## License
 
-No license has been specified in this repository documentation yet. Unless and until a license is added to the repository, do not assume that the code is available for unrestricted reuse, modification, or redistribution.
+No license has been specified. Until one is added, do not assume the code is available for unrestricted reuse, modification, or redistribution.
