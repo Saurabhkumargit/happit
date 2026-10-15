@@ -17,6 +17,7 @@ A habit-building and consistency-tracking web app that helps you record the effo
 - [About Happit](#about-happit)
 - [Product philosophy](#product-philosophy)
 - [Features](#features)
+- [Install Happit on Android](#install-happit-on-android)
 - [Screens and experience](#screens-and-experience)
 - [Technology stack](#technology-stack)
 - [Architecture](#architecture)
@@ -101,12 +102,28 @@ The current application includes the following core capabilities:
 
 ### User experience and PWA
 - Responsive dark interface with a restrained purple accent.
-- Installable Progressive Web App (PWA) support.
+- Installable Progressive Web App (PWA) support, so Happit can be added to a supported device's home screen and launched in an app-like window.
 - Application-shell offline support for the parts of the experience cached by the service worker.
 - Timer behavior designed to preserve elapsed time through interruptions.
 - Loading, empty, and error states throughout the core experience.
 
-**Offline limitation:** Application-shell caching does not mean every operation works offline. Server-backed actions such as authentication, fetching fresh data, and saving activities require a network connection. Full offline activity queuing and conflict resolution are not currently promised.
+## Install Happit on Android
+
+Happit is a **Progressive Web App (PWA)**. On a supported Android device and browser, you can install it from the website and use it from your home screen like an app—without needing to install it through the Google Play Store.
+
+1. Open [https://happit.online](https://happit.online) in Chrome on your Android device.
+2. Open the browser menu (the three-dot menu).
+3. Choose **Install app** or **Add to Home screen**. The exact wording can vary by browser and device.
+4. Follow the prompt to finish installing.
+5. Launch Happit from the new home-screen icon.
+
+Once installed, Happit can open in an app-like experience rather than a regular browser tab. The installation option and available PWA behavior depend on browser support and the site's current PWA configuration.
+
+**PWA is not the same as a native Android app.** Happit does not currently require a Play Store listing or a separate APK for this install flow.
+
+### Offline behavior
+
+Some application resources may be available from the service worker cache, which can help the app shell load in limited connectivity. However, **Happit is not a fully offline-first app**: signing in, loading fresh server data, and saving activities require a network connection. Offline activity queues and conflict resolution are not currently promised.
 
 ## Screens and experience
 
